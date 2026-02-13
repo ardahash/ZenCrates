@@ -18,6 +18,10 @@ if (!rpcUrl || !contractAddress || !privateKey) {
 const blsApiKey = process.env.BLS_API_KEY || "";
 const blsCpiSeries = process.env.BLS_CPI_SERIES || "CUUR0000SA0";
 
+const massiveApiKey = process.env.MASSIVE_API_KEY || process.env.apiKey || "";
+const massiveBaseUrl = process.env.MASSIVE_BASE_URL || "https://api.massive.com";
+const massiveTickerMapInput = process.env.MASSIVE_TICKER_MAP || "";
+
 const baseRpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
 const chainlinkEthFeed =
   process.env.CHAINLINK_ETH_USD_FEED ||
@@ -67,8 +71,60 @@ const historyPath =
   process.env.ORACLE_HISTORY_PATH ||
   path.resolve(process.cwd(), "data", "oracle-history.json");
 
+const defaultMassiveTickerMap: Record<string, string> = {
+  "sp500-index": "I:SPX",
+  "macro-stress": "I:VIX",
+  "btc-momentum": "X:BTCUSD",
+  "eth-usd": "X:ETHUSD"
+};
+
 function parsePrice(value: string) {
   return ethers.parseUnits(value, priceDecimals);
+}
+
+function parseMassiveTickerMap(input: string) {
+  const map: Record<string, string> = {};
+  if (!input) return map;
+  for (const entry of input.split(",")) {
+    const trimmed = entry.trim();
+    if (!trimmed) continue;
+    const eqIndex = trimmed.indexOf("=");
+    if (eqIndex <= 0) continue;
+    const crateId = trimmed.slice(0, eqIndex).trim();
+    const ticker = trimmed.slice(eqIndex + 1).trim();
+    if (!crateId || !ticker) continue;
+    map[crateId] = ticker;
+  }
+  return map;
+}
+
+async function fetchMassiveIndices(tickers: string[]) {
+  if (!massiveApiKey) {
+    throw new Error("Missing MASSIVE_API_KEY.");
+  }
+  if (tickers.length === 0) {
+    return new Map<string, number>();
+  }
+  const params = new URLSearchParams();
+  params.set("ticker.any_of", tickers.join(","));
+  params.set("limit", String(Math.min(tickers.length, 250)));
+  params.set("apiKey", massiveApiKey);
+  const url = `${massiveBaseUrl}/v3/snapshot/indices?${params.toString()}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Massive indices snapshot failed ${response.status}: ${response.statusText}`);
+  }
+  const data = await response.json();
+  const results = Array.isArray(data?.results) ? data.results : [];
+  const map = new Map<string, number>();
+  for (const item of results) {
+    const ticker = item?.ticker;
+    const value = Number(item?.value);
+    if (typeof ticker === "string" && Number.isFinite(value)) {
+      map.set(ticker, value);
+    }
+  }
+  return map;
 }
 
 function appendHistory(crateId: string, price: bigint, timestamp: bigint) {
@@ -202,14 +258,35 @@ async function fetchChainlinkPrice(feedAddress: string): Promise<string> {
 
 async function buildPrices(): Promise<PriceMap> {
   const prices: PriceMap = {};
+  const massiveTickerMap = {
+    ...defaultMassiveTickerMap,
+    ...parseMassiveTickerMap(massiveTickerMapInput)
+  };
+  const massiveTickers = Array.from(new Set(Object.values(massiveTickerMap)));
+  let massivePrices = new Map<string, number>();
+  if (massiveApiKey && massiveTickers.length > 0) {
+    try {
+      massivePrices = await fetchMassiveIndices(massiveTickers);
+    } catch (error) {
+      console.warn("Massive indices fetch failed, falling back to other sources.", error);
+    }
+  }
 
   const [ethPrice, btcPrice] = await Promise.all([
     fetchChainlinkPrice(chainlinkEthFeed),
     fetchChainlinkPrice(chainlinkBtcFeed)
   ]);
 
-  prices["eth-usd"] = ethPrice;
-  prices["btc-momentum"] = btcPrice;
+  const ethMassiveTicker = massiveTickerMap["eth-usd"];
+  const btcMassiveTicker = massiveTickerMap["btc-momentum"];
+  prices["eth-usd"] =
+    ethMassiveTicker && massivePrices.has(ethMassiveTicker)
+      ? massivePrices.get(ethMassiveTicker)!.toString()
+      : ethPrice;
+  prices["btc-momentum"] =
+    btcMassiveTicker && massivePrices.has(btcMassiveTicker)
+      ? massivePrices.get(btcMassiveTicker)!.toString()
+      : btcPrice;
 
   const [{ cpiLevel }, treasury, realRate] = await Promise.all([
     fetchBlsCpi(),
@@ -219,10 +296,19 @@ async function buildPrices(): Promise<PriceMap> {
 
   prices["inflation-hedge"] = cpiLevel.toFixed(3);
   prices["treasury-index"] = treasury.threeMonth.toFixed(3);
-  prices["sp500-index"] = treasury.tenYear.toFixed(3);
+  const sp500MassiveTicker = massiveTickerMap["sp500-index"];
+  prices["sp500-index"] =
+    sp500MassiveTicker && massivePrices.has(sp500MassiveTicker)
+      ? massivePrices.get(sp500MassiveTicker)!.toString()
+      : treasury.tenYear.toFixed(3);
 
-  const curveInversion = Math.max(0, treasury.threeMonth - treasury.tenYear);
-  prices["macro-stress"] = (100 + curveInversion * 10).toFixed(3);
+  const macroStressTicker = massiveTickerMap["macro-stress"];
+  if (macroStressTicker && massivePrices.has(macroStressTicker)) {
+    prices["macro-stress"] = massivePrices.get(macroStressTicker)!.toString();
+  } else {
+    const curveInversion = Math.max(0, treasury.threeMonth - treasury.tenYear);
+    prices["macro-stress"] = (100 + curveInversion * 10).toFixed(3);
+  }
 
   prices["zgold-index"] = (100 + realRate * 10).toFixed(3);
 

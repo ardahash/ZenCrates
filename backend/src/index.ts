@@ -9,6 +9,41 @@ import { TIERS } from "./data/tiers.js";
 import { CRATES } from "./data/crates.js";
 import { BRIDGE_STATUS } from "./data/bridge.js";
 
+type Tier = {
+  tier: number;
+  label: string;
+  minBalance: number;
+  maxBalance: number | null;
+  rebatePercent: number;
+};
+
+type Crate = {
+  id: string;
+  name: string;
+  ticker: string;
+  description: string;
+  longDescription?: string;
+  category: string;
+  riskLevel: string;
+  collateralType: string;
+  currentPrice: number;
+  priceChange24h: number;
+  tvl: number;
+  fees: {
+    mint: number;
+    burn: number;
+    management: number;
+  };
+  oracleSources: Array<{ name: string; type: string; endpoint: string }>;
+  createdAt: string;
+  isActive: boolean;
+  contractAddress?: string;
+  explorerUrl?: string;
+};
+
+const BASE_TIERS: Tier[] = TIERS.map((tier) => ({ ...tier }));
+const CRATES_DATA: Crate[] = CRATES.map((crate) => ({ ...crate }));
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -60,9 +95,9 @@ const historyPath =
   process.env.ORACLE_HISTORY_PATH ||
   path.resolve(process.cwd(), "data", "oracle-history.json");
 
-const defaultTierLabels = TIERS.map((tier) => tier.label);
+const defaultTierLabels = BASE_TIERS.map((tier) => tier.label);
 
-let cachedTiers: { data: typeof TIERS; fetchedAt: number } | null = null;
+let cachedTiers: { data: Tier[]; fetchedAt: number } | null = null;
 
 function normalizeCrateId(id: string) {
   return id.startsWith("0x") && id.length === 66 ? id : ethers.id(id);
@@ -118,8 +153,8 @@ async function computeTvl(crateAddress: string, ethUsdPriceRaw: bigint) {
   return Number(ethers.formatUnits(usdValueScaled, ethPriceDecimals));
 }
 
-function resolveTier(balance: number, tiers: typeof TIERS) {
-  let current = tiers[0] ?? {
+function resolveTier(balance: number, tiers: Tier[]) {
+  let current: Tier = tiers[0] ?? {
     tier: 0,
     label: "None",
     minBalance: 0,
@@ -135,14 +170,14 @@ function resolveTier(balance: number, tiers: typeof TIERS) {
 }
 
 async function fetchTierRules() {
-  if (!rebateController) return TIERS;
+  if (!rebateController) return BASE_TIERS;
   const now = Date.now();
   if (cachedTiers && now - cachedTiers.fetchedAt < 30_000) {
     return cachedTiers.data;
   }
 
   const rawTiers: Array<{ minAmount: bigint; rebateBps: number }> = await rebateController.tiers();
-  const mapped = rawTiers.map((tier, index) => {
+  const mapped: Tier[] = rawTiers.map((tier, index) => {
     const minBalance = Number(ethers.formatUnits(tier.minAmount, 18));
     const rebatePercent = Number(tier.rebateBps) / 100;
     const label = defaultTierLabels[index] ?? `Tier ${index}`;
@@ -201,11 +236,11 @@ app.get("/api/crates", async (_req, res) => {
   const ethUsd = await fetchOraclePrice(ethOracleId);
 
   const crates = await Promise.all(
-    CRATES.map(async (crate) => {
+    CRATES_DATA.map(async (crate) => {
       const price = await fetchOraclePrice(crate.id);
       const currentPrice = formatPrice(price.price, priceDecimals);
       const priceChange24h = computeChange24h(crate.id, currentPrice);
-      const tvl = await computeTvl(crate.contractAddress, ethUsd.price);
+      const tvl = await computeTvl(crate.contractAddress ?? "", ethUsd.price);
 
       return {
         ...crate,
@@ -221,7 +256,7 @@ app.get("/api/crates", async (_req, res) => {
 });
 
 app.get("/api/crates/:id", async (req, res) => {
-  const crate = CRATES.find((item) => item.id === req.params.id);
+  const crate = CRATES_DATA.find((item) => item.id === req.params.id);
   if (!crate) {
     res.status(404).json({ error: "Crate not found" });
     return;
@@ -231,7 +266,7 @@ app.get("/api/crates/:id", async (req, res) => {
   const currentPrice = formatPrice(price.price, priceDecimals);
   const priceChange24h = computeChange24h(crate.id, currentPrice);
   const ethUsd = await fetchOraclePrice(ethOracleId);
-  const tvl = await computeTvl(crate.contractAddress, ethUsd.price);
+  const tvl = await computeTvl(crate.contractAddress ?? "", ethUsd.price);
 
   const history = getHistory(crate.id).slice(-90);
   const priceHistory = history.map((entry) => ({
@@ -253,7 +288,7 @@ app.get("/api/crates/:id", async (req, res) => {
 
 app.get("/api/prices", async (_req, res) => {
   const prices = await Promise.all(
-    CRATES.map(async (crate) => {
+    CRATES_DATA.map(async (crate) => {
       const price = await fetchOraclePrice(crate.id);
       const formatted = formatPrice(price.price, priceDecimals);
       return {
@@ -277,13 +312,13 @@ app.get("/api/portfolio", async (req, res) => {
   }
 
   const prices = new Map<string, number>();
-  for (const crate of CRATES) {
+  for (const crate of CRATES_DATA) {
     const price = await fetchOraclePrice(crate.id);
     prices.set(crate.id, formatPrice(price.price, priceDecimals));
   }
 
   const positions = await Promise.all(
-    CRATES.map(async (crate) => {
+    CRATES_DATA.map(async (crate) => {
       if (!crate.contractAddress || crate.contractAddress === "0x0000000000000000000000000000000000000000") {
         return {
           crateId: crate.id,
