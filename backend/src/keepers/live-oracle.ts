@@ -88,6 +88,20 @@ function parsePrice(value: string) {
   return ethers.parseUnits(value, priceDecimals);
 }
 
+function readLastPrice(crateId: string): string | null {
+  if (!fs.existsSync(historyPath)) return null;
+  try {
+    const raw = fs.readFileSync(historyPath, "utf8");
+    if (!raw.trim()) return null;
+    const parsed = JSON.parse(raw) as { entries?: Record<string, Array<{ timestamp: number; price: string }>> };
+    const entries = parsed.entries?.[crateId];
+    if (!entries || entries.length === 0) return null;
+    return entries[entries.length - 1].price ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function parseMassiveTickerMap(input: string) {
   const map: Record<string, string> = {};
   if (!input) return map;
@@ -108,7 +122,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchMassiveAggregate(ticker: string) {
+async function fetchMassiveAggregate(ticker: string, attempt: number = 1): Promise<number> {
   if (!massiveApiKey) {
     throw new Error("Missing MASSIVE_API_KEY.");
   }
@@ -122,6 +136,12 @@ async function fetchMassiveAggregate(ticker: string) {
     ticker
   )}/range/1/minute/${from}/${now}?${params.toString()}`;
   const response = await fetch(url);
+  if (response.status === 429 && attempt < 3) {
+    const retryAfter = Number(response.headers.get("retry-after") || "0");
+    const waitMs = Math.max(retryAfter * 1000, massiveThrottleMs);
+    await sleep(waitMs);
+    return fetchMassiveAggregate(ticker, attempt + 1);
+  }
   if (!response.ok) {
     throw new Error(`Massive aggregate failed ${response.status}: ${response.statusText}`);
   }
@@ -294,19 +314,56 @@ async function buildPrices(): Promise<PriceMap> {
   prices["eth-usd"] = ethPrice;
   prices["btc-momentum"] = btcPrice;
 
-  const [{ cpiLevel }, treasury, realRate] = await Promise.all([
-    fetchBlsCpi(),
-    fetchTreasuryRates(),
-    fetchTreasuryRealRate()
-  ]);
+  let cpiLevel: number | null = null;
+  let treasury: { threeMonth: number; tenYear: number } | null = null;
+  let realRate: number | null = null;
 
-  prices["inflation-hedge"] = cpiLevel.toFixed(3);
-  prices["treasury-index"] = treasury.threeMonth.toFixed(3);
-  prices["sp500-index"] = treasury.tenYear.toFixed(3);
-  const curveInversion = Math.max(0, treasury.threeMonth - treasury.tenYear);
-  prices["macro-stress"] = (100 + curveInversion * 10).toFixed(3);
+  try {
+    const bls = await fetchBlsCpi();
+    cpiLevel = bls.cpiLevel;
+  } catch (error) {
+    console.warn("BLS CPI fetch failed; using last known value if available.", error);
+  }
 
-  prices["zgold-index"] = (100 + realRate * 10).toFixed(3);
+  try {
+    treasury = await fetchTreasuryRates();
+  } catch (error) {
+    console.warn("Treasury rate fetch failed; using last known values if available.", error);
+  }
+
+  try {
+    realRate = await fetchTreasuryRealRate();
+  } catch (error) {
+    console.warn("Treasury real rate fetch failed; using last known value if available.", error);
+  }
+
+  if (cpiLevel !== null) {
+    prices["inflation-hedge"] = cpiLevel.toFixed(3);
+  } else {
+    const last = readLastPrice("inflation-hedge");
+    if (last) prices["inflation-hedge"] = last;
+  }
+
+  if (treasury) {
+    prices["treasury-index"] = treasury.threeMonth.toFixed(3);
+    prices["sp500-index"] = treasury.tenYear.toFixed(3);
+    const curveInversion = Math.max(0, treasury.threeMonth - treasury.tenYear);
+    prices["macro-stress"] = (100 + curveInversion * 10).toFixed(3);
+  } else {
+    const lastTreasury = readLastPrice("treasury-index");
+    if (lastTreasury) prices["treasury-index"] = lastTreasury;
+    const lastSp = readLastPrice("sp500-index");
+    if (lastSp) prices["sp500-index"] = lastSp;
+    const lastStress = readLastPrice("macro-stress");
+    if (lastStress) prices["macro-stress"] = lastStress;
+  }
+
+  if (realRate !== null) {
+    prices["zgold-index"] = (100 + realRate * 10).toFixed(3);
+  } else {
+    const last = readLastPrice("zgold-index");
+    if (last) prices["zgold-index"] = last;
+  }
 
   for (const [crateId, ticker] of Object.entries(massiveTickerMap)) {
     const price = massivePrices.get(ticker);
