@@ -22,8 +22,17 @@
       "macro-stress": "0x3BBaFCA2fFF4F2b510e77eae4302CF75Dd13e44C",
       "sp500-index": "0x9dCfe4aA2FFfCc3E554F464E6Ec5eD4610B5907e",
       "btc-momentum": "0xc61139aD1ad4D01f717de54120d30F8a8286AfCB",
-      "treasury-index": "0x5CD2969eF4Fe33375D4dF762dbC124837C6eBaa4"
+      "treasury-index": "0x5CD2969eF4Fe33375D4dF762dbC124837C6eBaa4",
+      "equity-large": "0xB7AF467BF5371Ac4D66415570361fc73706A5208",
+      "equity-tech": "0xc5FD69d18e553C9dE4799282f5bF2d8795D43d0F",
+      "equity-bluechip": "0x97FBD7BB10E0B85D37aF2e2303f1EF3Ae416Ffd1",
+      "metal-gold": "0x8390F02aE9f350632B22766Ea22d9A209Fd6e2d7",
+      "metal-silver": "0x7f24A8c6E296C4311D0856D7FA730c27CA9A3ce6",
+      "metal-copper": "0xBcEbddd7001F113e7f1102D0C3E26F58E32Cb7f3",
+      "fx-eurusd": "0x206a0f57aED78E7BF75e48D7f01990A41A130F6B",
+      "fx-gbpusd": "0x0A6ffBDB5f088AcDCEB4Ca6B606054F58e7ed2c3",
+      "fx-usdjpy": "0xB9151064D9241cdCBAE32Bb2a0862aD318047bfc"
     }
   },
-  "lastUpdated": "2026-02-13T06:15:47.198Z"
+  "lastUpdated": "2026-02-13T11:16:41.761Z"
 }

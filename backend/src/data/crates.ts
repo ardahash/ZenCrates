@@ -234,8 +234,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0xB7AF467BF5371Ac4D66415570361fc73706A5208",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0xB7AF467BF5371Ac4D66415570361fc73706A5208"
   },
   {
     "id": "equity-tech",
@@ -268,8 +268,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0xc5FD69d18e553C9dE4799282f5bF2d8795D43d0F",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0xc5FD69d18e553C9dE4799282f5bF2d8795D43d0F"
   },
   {
     "id": "equity-bluechip",
@@ -302,8 +302,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0x97FBD7BB10E0B85D37aF2e2303f1EF3Ae416Ffd1",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0x97FBD7BB10E0B85D37aF2e2303f1EF3Ae416Ffd1"
   },
   {
     "id": "metal-gold",
@@ -336,8 +336,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0x8390F02aE9f350632B22766Ea22d9A209Fd6e2d7",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0x8390F02aE9f350632B22766Ea22d9A209Fd6e2d7"
   },
   {
     "id": "metal-silver",
@@ -370,8 +370,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0x7f24A8c6E296C4311D0856D7FA730c27CA9A3ce6",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0x7f24A8c6E296C4311D0856D7FA730c27CA9A3ce6"
   },
   {
     "id": "metal-copper",
@@ -404,8 +404,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0xBcEbddd7001F113e7f1102D0C3E26F58E32Cb7f3",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0xBcEbddd7001F113e7f1102D0C3E26F58E32Cb7f3"
   },
   {
     "id": "fx-eurusd",
@@ -438,8 +438,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0x206a0f57aED78E7BF75e48D7f01990A41A130F6B",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0x206a0f57aED78E7BF75e48D7f01990A41A130F6B"
   },
   {
     "id": "fx-gbpusd",
@@ -472,8 +472,8 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0x0A6ffBDB5f088AcDCEB4Ca6B606054F58e7ed2c3",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0x0A6ffBDB5f088AcDCEB4Ca6B606054F58e7ed2c3"
   },
   {
     "id": "fx-usdjpy",
@@ -506,7 +506,7 @@ export const CRATES = [
     ],
     "createdAt": "2026-02-13T00:00:00Z",
     "isActive": true,
-    "contractAddress": "0x0000000000000000000000000000000000000000",
-    "explorerUrl": ""
+    "contractAddress": "0xB9151064D9241cdCBAE32Bb2a0862aD318047bfc",
+    "explorerUrl": "https://horizen.calderaexplorer.xyz/address/0xB9151064D9241cdCBAE32Bb2a0862aD318047bfc"
   }
 ] as const;
