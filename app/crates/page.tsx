@@ -74,6 +74,10 @@ export default function ExploreCratesPage() {
           <p className="mt-2 text-muted-foreground">
             Browse synthetic exposure tokens and strategy vaults.
           </p>
+          <div className="mt-4 rounded-lg border border-zen-teal/30 bg-zen-teal/10 px-4 py-3 text-sm text-muted-foreground">
+            These crates are open-data proxy indices derived from public sources
+            like U.S. Treasury and BLS data. They are not official benchmarks.
+          </div>
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>

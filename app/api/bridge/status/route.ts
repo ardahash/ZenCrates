@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { MOCK_BRIDGE_STATUS } from "@/lib/mock-data";
+import { backendBaseUrl } from "@/lib/backend";
 
-// TODO: Replace with real bridge status polling from bridge contract / relayer
 export async function GET() {
-  return NextResponse.json(MOCK_BRIDGE_STATUS);
+  const response = await fetch(`${backendBaseUrl()}/api/bridge/status`, { cache: "no-store" });
+  const data = await response.json();
+  return NextResponse.json(data, { status: response.status });
 }

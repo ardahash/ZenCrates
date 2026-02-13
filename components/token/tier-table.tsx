@@ -1,16 +1,14 @@
 "use client";
 
 import type { TierRule } from "@/lib/types";
-import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 interface TierTableProps {
   tiers: TierRule[];
+  currentTier?: number | null;
 }
 
-export function TierTable({ tiers }: TierTableProps) {
-  const { wallet } = useAppStore();
-
+export function TierTable({ tiers, currentTier }: TierTableProps) {
   return (
     <div className="rounded-lg border border-border bg-card overflow-hidden">
       <div className="overflow-x-auto">
@@ -30,8 +28,7 @@ export function TierTable({ tiers }: TierTableProps) {
           </thead>
           <tbody>
             {tiers.map((tier) => {
-              const isUserTier =
-                wallet.isConnected && wallet.cratesTier === tier.tier;
+              const isUserTier = currentTier === tier.tier;
               return (
                 <tr
                   key={tier.tier}

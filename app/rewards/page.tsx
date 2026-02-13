@@ -2,25 +2,25 @@
 
 // TODO: Replace with real wallet-specific rewards data from backend
 
-import { useAppStore } from "@/lib/store";
 import { useQuery } from "@tanstack/react-query";
 import type { RewardSummary } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Wallet, AlertTriangle, Percent, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useAccount } from "wagmi";
+import { WalletButton } from "@/components/wallet-button";
 
 export default function RewardsPage() {
-  const { wallet, connectWallet } = useAppStore();
+  const { address, isConnected } = useAccount();
 
   const { data: rewards, isLoading } = useQuery<RewardSummary>({
-    queryKey: ["rewards", wallet.address],
-    queryFn: () => fetch("/api/rewards").then((r) => r.json()),
-    enabled: wallet.isConnected,
+    queryKey: ["rewards", address],
+    queryFn: () =>
+      fetch(`/api/rewards?wallet=${address}`).then((r) => r.json()),
+    enabled: isConnected && !!address,
   });
 
-  if (!wallet.isConnected) {
+  if (!isConnected) {
     return (
       <div className="bg-background">
         <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
@@ -35,13 +35,9 @@ export default function RewardsPage() {
               Connect your wallet to view your fee rebate history and
               estimated credits.
             </p>
-            <Button
-              onClick={connectWallet}
-              className="mt-8 bg-zen-teal text-background hover:bg-zen-teal/90"
-            >
-              <Wallet className="mr-2 h-4 w-4" />
-              Connect Wallet
-            </Button>
+            <div className="mt-8">
+              <WalletButton />
+            </div>
           </div>
         </div>
       </div>
@@ -175,11 +171,11 @@ export default function RewardsPage() {
                 <AlertTriangle className="h-4 w-4 shrink-0 text-chart-4 mt-0.5" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Fee rebates are discounts/credits applied to protocol fees.
-                  They are not yield, interest, dividends, or investment
-                  returns. Rebate rates and tier thresholds are discretionary
-                  parameters controlled by governance and subject to change
-                  or discontinuation at any time. CRATES is not an investment
-                  and not a security.
+                  They are not interest or performance-based distributions.
+                  Rebate rates and tier thresholds are discretionary parameters
+                  controlled by governance and subject to change or
+                  discontinuation at any time. CRATES is a utility token and
+                  not a security.
                 </p>
               </div>
             </div>

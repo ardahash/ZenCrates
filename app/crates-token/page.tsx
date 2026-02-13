@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 // TODO: Replace with real contract reads + backend calls for token data
 // TODO: Integrate wallet chain switching for buy/bridge flows
 
 import { useQuery } from "@tanstack/react-query";
-import type { TokenMeta, TierRule } from "@/lib/types";
+import type { RewardSummary, TokenMeta, TierRule } from "@/lib/types";
 import { TierTable } from "@/components/token/tier-table";
 import { YourTierCard } from "@/components/token/your-tier-card";
 import { BuyModule } from "@/components/token/buy-module";
@@ -12,8 +12,10 @@ import { BridgeModule } from "@/components/token/bridge-module";
 import { TokenInfoPanel } from "@/components/token/token-info-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Shield, Vote, Percent } from "lucide-react";
+import { useAccount } from "wagmi";
 
 export default function CratesTokenPage() {
+  const { address, isConnected } = useAccount();
   const { data: token, isLoading: tokenLoading } = useQuery<TokenMeta>({
     queryKey: ["token"],
     queryFn: () => fetch("/api/token").then((r) => r.json()),
@@ -22,6 +24,13 @@ export default function CratesTokenPage() {
   const { data: tiers, isLoading: tiersLoading } = useQuery<TierRule[]>({
     queryKey: ["tiers"],
     queryFn: () => fetch("/api/tiers").then((r) => r.json()),
+  });
+
+  const { data: rewards, isLoading: rewardsLoading } = useQuery<RewardSummary>({
+    queryKey: ["rewards", address],
+    queryFn: () =>
+      fetch(`/api/rewards?wallet=${address}`).then((r) => r.json()),
+    enabled: isConnected && !!address,
   });
 
   const isLoading = tokenLoading || tiersLoading;
@@ -34,7 +43,7 @@ export default function CratesTokenPage() {
           <h1 className="text-3xl font-bold text-foreground">CRATES Token</h1>
           <p className="mt-2 max-w-2xl text-muted-foreground leading-relaxed">
             CRATES is the utility token for the ZenCrates protocol. Holding
-            CRATES unlocks tiered fee rebates — discounts on protocol fees
+            CRATES unlocks tiered fee rebates - discounts on protocol fees
             based on your token balance.
           </p>
         </div>
@@ -57,7 +66,7 @@ export default function CratesTokenPage() {
             </div>
             <h3 className="text-foreground font-medium text-sm">Governance</h3>
             <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Participate in protocol governance — vote on proposals that
+              Participate in protocol governance - vote on proposals that
               shape fee structures, crate parameters, and rebate programs.
             </p>
           </div>
@@ -92,7 +101,9 @@ export default function CratesTokenPage() {
                   Thresholds and percentages are set by governance and can
                   change.
                 </p>
-                {tiers && <TierTable tiers={tiers} />}
+                {tiers && (
+                  <TierTable tiers={tiers} currentTier={rewards?.currentTier ?? null} />
+                )}
               </div>
 
               {/* Disclaimer */}
@@ -104,13 +115,13 @@ export default function CratesTokenPage() {
                       Important Disclosures
                     </p>
                     <p>
-                      CRATES is a utility token. It is not an investment, not a
-                      security, and does not entitle the holder to dividends,
-                      profit share, or guaranteed price appreciation. Fee
-                      rebates are discretionary program parameters controlled by
-                      governance; they are subject to change or discontinuation
-                      at any time. Holding CRATES carries risks including smart
-                      contract vulnerability and market volatility.
+                      CRATES is a utility token. It is not a security and does
+                      not entitle the holder to ownership rights, cash payouts,
+                      or guaranteed price changes. Fee rebates are discretionary
+                      program parameters controlled by governance; they are
+                      subject to change or discontinuation at any time. Holding
+                      CRATES carries risks including smart contract
+                      vulnerability and market volatility.
                     </p>
                   </div>
                 </div>
@@ -119,7 +130,14 @@ export default function CratesTokenPage() {
 
             {/* Right column */}
             <div className="flex flex-col gap-6 lg:col-span-1">
-              {tiers && <YourTierCard tiers={tiers} />}
+              {tiers && (
+                <YourTierCard
+                  tiers={tiers}
+                  rewards={rewards}
+                  isConnected={isConnected}
+                  isLoading={rewardsLoading}
+                />
+              )}
               <BuyModule />
               <BridgeModule />
               {token && <TokenInfoPanel token={token} />}

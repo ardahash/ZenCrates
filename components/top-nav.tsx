@@ -1,14 +1,15 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { WalletButton } from "@/components/wallet-button";
-import { useAppStore } from "@/lib/store";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useAccount } from "wagmi";
 
 const NAV_LINKS = [
   { href: "/crates", label: "Explore" },
@@ -21,16 +22,24 @@ const NAV_LINKS = [
 
 export function TopNav() {
   const pathname = usePathname();
-  const { wallet } = useAppStore();
+  const { address } = useAccount();
   const [open, setOpen] = useState(false);
+  const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
+  const isAdmin = adminAddress && address?.toLowerCase() === adminAddress;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zen-teal">
-              <span className="text-sm font-bold text-background">Z</span>
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zen-teal/10 overflow-hidden">
+              <Image
+                src="/zkGold-250.png"
+                alt="ZenCrates logo"
+                width={32}
+                height={32}
+                priority
+              />
             </div>
             <span className="text-lg font-semibold text-foreground">
               ZenCrates
@@ -60,7 +69,7 @@ export function TopNav() {
                 )}
               </Link>
             ))}
-            {wallet.isAdmin && (
+            {isAdmin && (
               <Link
                 href="/admin"
                 className={cn(
@@ -112,7 +121,7 @@ export function TopNav() {
                   {link.label}
                 </Link>
               ))}
-              {wallet.isAdmin && (
+              {isAdmin && (
                 <Link
                   href="/admin"
                   onClick={() => setOpen(false)}

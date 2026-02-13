@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { MOCK_REWARD_SUMMARY } from "@/lib/mock-data";
+import { backendBaseUrl } from "@/lib/backend";
 
-// TODO: Replace with wallet-specific rewards query from backend
-// This should accept a wallet address param and return real data
-export async function GET() {
-  return NextResponse.json(MOCK_REWARD_SUMMARY);
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const response = await fetch(
+    `${backendBaseUrl()}/api/rewards${url.search}`,
+    { cache: "no-store" }
+  );
+  const data = await response.json();
+  return NextResponse.json(data, { status: response.status });
 }

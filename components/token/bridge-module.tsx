@@ -80,7 +80,7 @@ export function BridgeModule() {
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Bridging involves cross-chain messaging and carries additional
                 risk including smart contract risk on both chains and relayer
-                availability. CRATES is not an investment and not a security.
+                availability. CRATES is a utility token and not a security.
               </p>
             </div>
           </div>

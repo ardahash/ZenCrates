@@ -18,29 +18,29 @@ import type {
 export const MOCK_CRATES: Crate[] = [
   {
     id: "zgold-index",
-    name: "Gold Exposure Index",
-    ticker: "zGOLD-INDEX",
+    name: "Real Yield Anchor Index",
+    ticker: "zREAL",
     description:
-      "Synthetic exposure to the gold spot price via on-chain oracles. No physical custody.",
+      "Open-data proxy anchored to the U.S. 10-year real rate curve.",
     longDescription:
-      "zGOLD-INDEX provides synthetic market exposure that tracks the gold spot price using aggregated oracle feeds. This is a software-based index token — it does not represent ownership of physical gold, nor does it involve custody, storage, or redemption of any physical asset. Price deviations from the underlying index are possible.",
+      "zREAL is a software-based proxy index derived from the U.S. Treasury real rate curve (10-year). It is not gold, not a benchmark, and does not represent physical custody or redemption.",
     category: "exposure",
     riskLevel: "medium",
-    collateralType: "USDC",
-    currentPrice: 2341.5,
-    priceChange24h: 1.23,
+    collateralType: "ETH",
+    currentPrice: 118.4,
+    priceChange24h: 0.42,
     tvl: 4520000,
     fees: { mint: 0.003, burn: 0.003, management: 0.005 },
     oracleSources: [
       {
-        name: "Chainlink Gold/USD",
-        type: "on-chain",
-        endpoint: "0x0000...chainlink", // TODO: real oracle address
+        name: "US Treasury Real Rate Curve (10Y)",
+        type: "off-chain",
+        endpoint: "home.treasury.gov/.../daily_treasury_real_rate_curve",
       },
       {
-        name: "ZenCrates Aggregator",
+        name: "Signed Oracle",
         type: "off-chain",
-        endpoint: "https://placeholder-oracle.zencrates.io/gold", // TODO: real endpoint
+        endpoint: "https://oracle.zencrates.io/real-rate",
       },
     ],
     contractAddress: "0x0000000000000000000000000000000000000001",
@@ -50,29 +50,29 @@ export const MOCK_CRATES: Crate[] = [
   },
   {
     id: "inflation-hedge",
-    name: "Inflation Hedge Crate",
-    ticker: "zINFL-HEDGE",
+    name: "CPI Anchor Index",
+    ticker: "zCPI",
     description:
-      "Rules-based strategy rotating across inflation-sensitive synthetic assets.",
+      "Open-data CPI-U index level as an inflation proxy.",
     longDescription:
-      "The Inflation Hedge Crate uses a rules-based algorithm to allocate across multiple synthetic exposure tokens that tend to respond to inflationary macro conditions. The crate rebalances periodically based on oracle-reported economic indicators. This is not investment advice and past performance does not indicate future results.",
-    category: "strategy",
-    riskLevel: "high",
-    collateralType: "USDC",
-    currentPrice: 112.45,
-    priceChange24h: -0.87,
+      "zCPI tracks the CPI-U index level from the Bureau of Labor Statistics. It is an open-data proxy index with no custody of assets or redemption rights.",
+    category: "exposure",
+    riskLevel: "medium",
+    collateralType: "ETH",
+    currentPrice: 312.1,
+    priceChange24h: 0.12,
     tvl: 1830000,
     fees: { mint: 0.005, burn: 0.005, management: 0.01 },
     oracleSources: [
       {
-        name: "CPI Oracle Feed",
+        name: "BLS CPI-U (CUUR0000SA0)",
         type: "off-chain",
-        endpoint: "https://placeholder-oracle.zencrates.io/cpi",
+        endpoint: "api.bls.gov/publicAPI/v2/timeseries/data",
       },
       {
-        name: "Multi-Asset Price Feed",
-        type: "on-chain",
-        endpoint: "0x0000...multi",
+        name: "Signed Oracle",
+        type: "off-chain",
+        endpoint: "https://oracle.zencrates.io/cpi",
       },
     ],
     contractAddress: "0x0000000000000000000000000000000000000002",
@@ -82,29 +82,29 @@ export const MOCK_CRATES: Crate[] = [
   },
   {
     id: "macro-stress",
-    name: "Macro Stress Crate",
-    ticker: "zMACRO-STR",
+    name: "Curve Stress Index",
+    ticker: "zSTRESS",
     description:
-      "Strategy crate targeting portfolio hedging during macro stress events.",
+      "Open-data proxy derived from the 3M vs 10Y Treasury rate curve slope.",
     longDescription:
-      "The Macro Stress Crate runs a rules-based strategy designed to shift allocations toward defensive synthetic positions when macro stress indicators trigger. Uses volatility indices and yield-curve oracle feeds to inform rebalancing. Not a guarantee against losses. This is experimental DeFi software.",
+      "zSTRESS is a software index that tracks rate curve inversion pressure using U.S. Treasury 3-month and 10-year rates. It is not an official volatility index or licensed benchmark.",
     category: "strategy",
     riskLevel: "high",
-    collateralType: "Multi",
-    currentPrice: 98.2,
-    priceChange24h: 2.45,
+    collateralType: "ETH",
+    currentPrice: 100.6,
+    priceChange24h: 1.05,
     tvl: 980000,
     fees: { mint: 0.005, burn: 0.005, management: 0.015 },
     oracleSources: [
       {
-        name: "VIX Oracle",
+        name: "US Treasury Rate Curve (3M/10Y)",
         type: "off-chain",
-        endpoint: "https://placeholder-oracle.zencrates.io/vix",
+        endpoint: "home.treasury.gov/.../daily_treasury_rate_curve",
       },
       {
-        name: "Yield Curve Oracle",
+        name: "Signed Oracle",
         type: "off-chain",
-        endpoint: "https://placeholder-oracle.zencrates.io/yield",
+        endpoint: "https://oracle.zencrates.io/curve",
       },
     ],
     contractAddress: "0x0000000000000000000000000000000000000003",
@@ -114,24 +114,24 @@ export const MOCK_CRATES: Crate[] = [
   },
   {
     id: "sp500-index",
-    name: "S&P 500 Exposure",
-    ticker: "zSP500",
+    name: "Long Rate Momentum Index",
+    ticker: "zLONG",
     description:
-      "Synthetic exposure tracking the S&P 500 index via oracle aggregation.",
+      "Open-data proxy anchored to the U.S. 10-year Treasury rate.",
     longDescription:
-      "zSP500 provides synthetic market exposure to the S&P 500 index using multiple oracle data feeds. This token does not represent ownership of any equities or fund shares. It is purely a software-based synthetic instrument on the Horizen L3 network.",
+      "zLONG is a software-based proxy index derived from the U.S. Treasury 10-year nominal rate. It is not an official equity benchmark or licensed index.",
     category: "exposure",
     riskLevel: "medium",
-    collateralType: "USDC",
-    currentPrice: 5420.0,
-    priceChange24h: 0.34,
+    collateralType: "ETH",
+    currentPrice: 4.12,
+    priceChange24h: 0.06,
     tvl: 7200000,
     fees: { mint: 0.003, burn: 0.003, management: 0.005 },
     oracleSources: [
       {
-        name: "Market Data Oracle",
+        name: "US Treasury Rate Curve (10Y)",
         type: "off-chain",
-        endpoint: "https://placeholder-oracle.zencrates.io/sp500",
+        endpoint: "home.treasury.gov/.../daily_treasury_rate_curve",
       },
     ],
     contractAddress: "0x0000000000000000000000000000000000000004",
@@ -141,24 +141,24 @@ export const MOCK_CRATES: Crate[] = [
   },
   {
     id: "btc-momentum",
-    name: "BTC Momentum Crate",
-    ticker: "zBTC-MOM",
+    name: "Digital Momentum Index",
+    ticker: "zDIGI",
     description:
-      "Rules-based crate that adjusts BTC synthetic exposure based on momentum signals.",
+      "Digital asset proxy referencing BTC/USD via on-chain oracles.",
     longDescription:
-      "The BTC Momentum Crate uses a trend-following algorithm that increases or decreases synthetic BTC exposure based on moving-average crossover signals. Designed to reduce drawdowns during downtrends. This is experimental and not financial advice.",
+      "zDIGI is a synthetic index that references BTC/USD via on-chain oracle feeds. It is a software-based proxy with no custody of BTC or physical assets.",
     category: "strategy",
     riskLevel: "high",
     collateralType: "ETH",
-    currentPrice: 145.3,
+    currentPrice: 46850.3,
     priceChange24h: -1.56,
     tvl: 2100000,
     fees: { mint: 0.004, burn: 0.004, management: 0.012 },
     oracleSources: [
       {
-        name: "BTC Price Oracle",
+        name: "Chainlink BTC/USD (Base)",
         type: "on-chain",
-        endpoint: "0x0000...btc",
+        endpoint: "basescan.org/address/0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F",
       },
     ],
     contractAddress: "0x0000000000000000000000000000000000000005",
@@ -168,24 +168,24 @@ export const MOCK_CRATES: Crate[] = [
   },
   {
     id: "treasury-index",
-    name: "Treasury Rate Index",
-    ticker: "zTBILL",
+    name: "Short Rate Index",
+    ticker: "zSHORT",
     description:
-      "Synthetic exposure to short-term treasury rate movements via oracle feeds.",
+      "Open-data proxy anchored to the U.S. 3-month Treasury rate.",
     longDescription:
-      "zTBILL provides synthetic exposure to short-term US treasury rate movements. It does not represent ownership of any treasury securities. The index tracks rate changes through off-chain oracle feeds that report daily treasury yield data.",
+      "zSHORT tracks the U.S. Treasury 3-month rate as an open-data proxy index. It is a synthetic exposure tool with no custody of securities.",
     category: "exposure",
     riskLevel: "low",
-    collateralType: "USDC",
-    currentPrice: 101.12,
+    collateralType: "ETH",
+    currentPrice: 3.72,
     priceChange24h: 0.02,
     tvl: 3400000,
     fees: { mint: 0.002, burn: 0.002, management: 0.003 },
     oracleSources: [
       {
-        name: "Treasury Yield Oracle",
+        name: "US Treasury Rate Curve (3M)",
         type: "off-chain",
-        endpoint: "https://placeholder-oracle.zencrates.io/tbill",
+        endpoint: "home.treasury.gov/.../daily_treasury_rate_curve",
       },
     ],
     contractAddress: "0x0000000000000000000000000000000000000006",
@@ -283,8 +283,8 @@ export const MOCK_PORTFOLIO: Portfolio = {
   positions: [
     {
       crateId: "zgold-index",
-      crateName: "Gold Exposure Index",
-      ticker: "zGOLD-INDEX",
+      crateName: "Real Yield Anchor Index",
+      ticker: "zREAL",
       category: "exposure",
       balance: 4.2,
       value: 9834.3,
@@ -293,9 +293,9 @@ export const MOCK_PORTFOLIO: Portfolio = {
     },
     {
       crateId: "inflation-hedge",
-      crateName: "Inflation Hedge Crate",
-      ticker: "zINFL-HEDGE",
-      category: "strategy",
+      crateName: "CPI Anchor Index",
+      ticker: "zCPI",
+      category: "exposure",
       balance: 52.1,
       value: 5858.65,
       pnl: -123.45,
@@ -303,8 +303,8 @@ export const MOCK_PORTFOLIO: Portfolio = {
     },
     {
       crateId: "sp500-index",
-      crateName: "S&P 500 Exposure",
-      ticker: "zSP500",
+      crateName: "Long Rate Momentum Index",
+      ticker: "zLONG",
       category: "exposure",
       balance: 1.5,
       value: 8130.0,
@@ -313,8 +313,8 @@ export const MOCK_PORTFOLIO: Portfolio = {
     },
     {
       crateId: "treasury-index",
-      crateName: "Treasury Rate Index",
-      ticker: "zTBILL",
+      crateName: "Short Rate Index",
+      ticker: "zSHORT",
       category: "exposure",
       balance: 7.3,
       value: 738.18,
@@ -327,9 +327,9 @@ export const MOCK_PORTFOLIO: Portfolio = {
 export const MOCK_PROPOSALS: Proposal[] = [
   {
     id: "prop-001",
-    title: "Adjust zGOLD-INDEX oracle update frequency",
+    title: "Adjust zREAL oracle update cadence",
     description:
-      "Proposal to increase the oracle update frequency for zGOLD-INDEX from every 60 minutes to every 15 minutes to improve price accuracy during volatile periods.",
+      "Proposal to increase the oracle update cadence for zREAL from every 60 minutes to every 15 minutes to improve index freshness during volatile periods.",
     status: "active",
     votesFor: 125000,
     votesAgainst: 32000,
@@ -353,9 +353,9 @@ export const MOCK_PROPOSALS: Proposal[] = [
   },
   {
     id: "prop-003",
-    title: "Reduce management fee for Treasury Rate Index",
+    title: "Reduce management fee for Short Rate Index",
     description:
-      "Proposal to reduce the annual management fee for zTBILL from 0.3% to 0.15% to increase competitiveness.",
+      "Proposal to reduce the annual management fee for zSHORT from 0.3% to 0.15% to increase competitiveness.",
     status: "rejected",
     votesFor: 45000,
     votesAgainst: 180000,
@@ -366,9 +366,9 @@ export const MOCK_PROPOSALS: Proposal[] = [
   },
   {
     id: "prop-004",
-    title: "Emergency parameter update for Macro Stress Crate",
+    title: "Emergency parameter update for Curve Stress Index",
     description:
-      "Adjust the rebalancing thresholds for the Macro Stress Crate to better respond to rapid market movements. Requires multisig approval.",
+      "Adjust the curve stress thresholds to better respond to rapid market movements. Requires multisig approval.",
     status: "pending",
     votesFor: 0,
     votesAgainst: 0,
@@ -383,7 +383,7 @@ export const MOCK_ALERTS: Alert[] = [
   {
     id: "alert-1",
     type: "price",
-    message: "zGOLD-INDEX crossed above $2,340",
+    message: "zREAL crossed above $118",
     crateId: "zgold-index",
     timestamp: "2026-02-12T08:00:00Z",
     read: false,
@@ -391,14 +391,14 @@ export const MOCK_ALERTS: Alert[] = [
   {
     id: "alert-2",
     type: "governance",
-    message: "New governance proposal: Adjust zGOLD-INDEX oracle frequency",
+    message: "New governance proposal: Adjust zREAL oracle cadence",
     timestamp: "2026-01-15T00:00:00Z",
     read: true,
   },
   {
     id: "alert-3",
     type: "price",
-    message: "zBTC-MOM dropped below $146",
+    message: "zDIGI moved below $46,000",
     crateId: "btc-momentum",
     timestamp: "2026-02-11T14:00:00Z",
     read: false,

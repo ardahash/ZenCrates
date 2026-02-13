@@ -1,10 +1,8 @@
-// TODO: Replace with real backend + chain reads
-// This mock API returns deterministic crate data
-
 import { NextResponse } from "next/server";
-import { MOCK_CRATES } from "@/lib/mock-data";
+import { backendBaseUrl } from "@/lib/backend";
 
 export async function GET() {
-  // TODO: Fetch from real backend / on-chain registry
-  return NextResponse.json({ crates: MOCK_CRATES });
+  const response = await fetch(`${backendBaseUrl()}/api/crates`, { cache: "no-store" });
+  const data = await response.json();
+  return NextResponse.json(data, { status: response.status });
 }

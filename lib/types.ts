@@ -109,6 +109,16 @@ export interface TokenMeta {
       chainId: number; // TODO: replace with real chain ID
     };
   };
+  staking?: {
+    contractAddress: string;
+    explorerUrl: string;
+    sCrates: {
+      name: string;
+      symbol: string;
+      standard: string;
+      address: string;
+    };
+  };
 }
 
 export interface TierRule {
@@ -157,14 +167,14 @@ export const PLACEHOLDER_CONFIG = {
     ORACLE_REGISTRY: "0x0000000000000000000000000000000000000000",
     GOVERNANCE: "0x0000000000000000000000000000000000000000",
   },
-  RPC_URL: "https://placeholder-rpc.horizen.io", // TODO: replace with real RPC
-  CHAIN_ID: 0, // TODO: replace with real Horizen L3 chain ID
-  ORACLE_ENDPOINT: "https://placeholder-oracle.zencrates.io", // TODO: replace with real oracle
-  BACKEND_BASE_URL: "https://placeholder-api.zencrates.io", // TODO: replace with real backend
+  RPC_URL: "https://horizen.calderachain.xyz/http",
+  CHAIN_ID: 26514,
+  ORACLE_ENDPOINT: "http://localhost:4000/api/prices",
+  BACKEND_BASE_URL: "http://localhost:4000",
   CRATES_TOKEN: {
     HORIZEN_L3_ADDRESS: "0x0000000000000000000000000000000000000000", // TODO: replace with real CRATES token address
     BASE_ADDRESS: "0x0000000000000000000000000000000000000000", // TODO: replace with real bridged CRATES address
-    HORIZEN_L3_CHAIN_ID: 0, // TODO: replace with real chain ID
+    HORIZEN_L3_CHAIN_ID: 26514,
     BASE_CHAIN_ID: 8453, // Base mainnet
     BRIDGE_CONTRACT: "0x0000000000000000000000000000000000000000", // TODO: replace with bridge contract
   },

@@ -1,9 +1,6 @@
 "use client";
 
 // TODO: Replace with real governance contract reads
-
-import { MOCK_PROPOSALS } from "@/lib/mock-data";
-import { ProposalCard } from "@/components/governance/proposal-card";
 import { RebateProgramPanel } from "@/components/governance/rebate-program-panel";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,9 +34,10 @@ export default function GovernancePage() {
 
           <TabsContent value="proposals">
             <div className="flex flex-col gap-4">
-              {MOCK_PROPOSALS.map((proposal) => (
-                <ProposalCard key={proposal.id} proposal={proposal} />
-              ))}
+              <div className="rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
+                No proposals yet. Governance proposals will appear here once the
+                on-chain Governor is live.
+              </div>
             </div>
           </TabsContent>
 

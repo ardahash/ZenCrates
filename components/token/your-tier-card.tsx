@@ -1,19 +1,19 @@
 "use client";
 
-import { useAppStore } from "@/lib/store";
-import type { TierRule } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import type { RewardSummary, TierRule } from "@/lib/types";
 import { Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WalletButton } from "@/components/wallet-button";
 
 interface YourTierCardProps {
   tiers: TierRule[];
+  rewards?: RewardSummary | null;
+  isConnected: boolean;
+  isLoading?: boolean;
 }
 
-export function YourTierCard({ tiers }: YourTierCardProps) {
-  const { wallet, connectWallet } = useAppStore();
-
-  if (!wallet.isConnected) {
+export function YourTierCard({ tiers, rewards, isConnected, isLoading }: YourTierCardProps) {
+  if (!isConnected) {
     return (
       <div className="rounded-lg border border-border bg-card p-6">
         <h3 className="text-foreground font-medium mb-4">Your Tier</h3>
@@ -22,19 +22,24 @@ export function YourTierCard({ tiers }: YourTierCardProps) {
           <p className="text-sm text-muted-foreground">
             Connect your wallet to see your CRATES balance and rebate tier.
           </p>
-          <Button
-            onClick={connectWallet}
-            className="bg-zen-teal text-background hover:bg-zen-teal/90"
-          >
-            Connect Wallet
-          </Button>
+          <WalletButton />
         </div>
       </div>
     );
   }
 
-  const currentTier = tiers.find((t) => t.tier === wallet.cratesTier);
-  const nextTier = tiers.find((t) => t.tier === wallet.cratesTier + 1);
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-6">
+        <h3 className="text-foreground font-medium mb-4">Your Tier</h3>
+        <div className="text-sm text-muted-foreground">Loading wallet data…</div>
+      </div>
+    );
+  }
+
+  const currentTier = tiers.find((t) => t.tier === rewards?.currentTier);
+  const nextTier = tiers.find((t) => t.tier === (currentTier?.tier ?? 0) + 1);
+  const balance = rewards?.cratesBalance ?? 0;
 
   return (
     <div className="rounded-lg border border-border bg-card p-6">
@@ -43,7 +48,7 @@ export function YourTierCard({ tiers }: YourTierCardProps) {
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">CRATES Balance</span>
           <span className="font-mono font-medium text-foreground">
-            {wallet.cratesBalance.toLocaleString()}
+            {balance.toLocaleString()}
           </span>
         </div>
         <div className="flex items-center justify-between">

@@ -1,18 +1,8 @@
-// TODO: Replace with real oracle endpoint reads
-// This mock API returns price snapshots for all crates
-
 import { NextResponse } from "next/server";
-import { MOCK_CRATES } from "@/lib/mock-data";
+import { backendBaseUrl } from "@/lib/backend";
 
 export async function GET() {
-  // TODO: Fetch from ORACLE_ENDPOINT
-  const prices = MOCK_CRATES.map((crate) => ({
-    crateId: crate.id,
-    ticker: crate.ticker,
-    price: crate.currentPrice,
-    change24h: crate.priceChange24h,
-    timestamp: Date.now(),
-  }));
-
-  return NextResponse.json({ prices });
+  const response = await fetch(`${backendBaseUrl()}/api/prices`, { cache: "no-store" });
+  const data = await response.json();
+  return NextResponse.json(data, { status: response.status });
 }

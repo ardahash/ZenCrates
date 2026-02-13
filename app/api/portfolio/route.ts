@@ -1,11 +1,8 @@
-// TODO: Replace with real wallet reads from chain + backend
-// This mock API returns a placeholder portfolio
-
 import { NextResponse } from "next/server";
-import { MOCK_PORTFOLIO } from "@/lib/mock-data";
+import { backendBaseUrl } from "@/lib/backend";
 
 export async function GET() {
-  // TODO: Read wallet address from auth/session,
-  // fetch positions from chain via contract reads
-  return NextResponse.json(MOCK_PORTFOLIO);
+  const response = await fetch(`${backendBaseUrl()}/api/portfolio`, { cache: "no-store" });
+  const data = await response.json();
+  return NextResponse.json(data, { status: response.status });
 }

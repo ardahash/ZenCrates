@@ -2,7 +2,6 @@
 
 // TODO: Replace with real wallet reads + contract position data
 
-import { useAppStore } from "@/lib/store";
 import { useQuery } from "@tanstack/react-query";
 import type { Portfolio, RewardSummary } from "@/lib/types";
 import { PortfolioSummary } from "@/components/dashboard/portfolio-summary";
@@ -10,25 +9,28 @@ import { PositionsTable } from "@/components/dashboard/positions-table";
 import { AlertsList } from "@/components/dashboard/alerts-list";
 import { CratesBalanceCard } from "@/components/dashboard/crates-balance-card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Wallet } from "lucide-react";
+import { useAccount } from "wagmi";
+import { WalletButton } from "@/components/wallet-button";
 
 export default function DashboardPage() {
-  const { wallet, connectWallet } = useAppStore();
+  const { address, isConnected } = useAccount();
 
   const { data: portfolio, isLoading } = useQuery<Portfolio>({
-    queryKey: ["portfolio"],
-    queryFn: () => fetch("/api/portfolio").then((r) => r.json()),
-    enabled: wallet.isConnected,
+    queryKey: ["portfolio", address],
+    queryFn: () =>
+      fetch(`/api/portfolio?wallet=${address}`).then((r) => r.json()),
+    enabled: isConnected && !!address,
   });
 
   const { data: rewards } = useQuery<RewardSummary>({
-    queryKey: ["rewards", wallet.address],
-    queryFn: () => fetch("/api/rewards").then((r) => r.json()),
-    enabled: wallet.isConnected,
+    queryKey: ["rewards", address],
+    queryFn: () =>
+      fetch(`/api/rewards?wallet=${address}`).then((r) => r.json()),
+    enabled: isConnected && !!address,
   });
 
-  if (!wallet.isConnected) {
+  if (!isConnected) {
     return (
       <div className="bg-background">
         <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
@@ -43,13 +45,9 @@ export default function DashboardPage() {
               Connect your wallet to view your portfolio, positions, and
               alerts across all ZenCrates.
             </p>
-            <Button
-              onClick={connectWallet}
-              className="mt-8 bg-zen-teal text-background hover:bg-zen-teal/90"
-            >
-              <Wallet className="mr-2 h-4 w-4" />
-              Connect Wallet
-            </Button>
+            <div className="mt-8">
+              <WalletButton />
+            </div>
           </div>
         </div>
       </div>

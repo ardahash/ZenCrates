@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { MOCK_TOKEN_META } from "@/lib/mock-data";
+import { backendBaseUrl } from "@/lib/backend";
 
-// TODO: Replace with real contract reads / backend call for token metadata
 export async function GET() {
-  return NextResponse.json(MOCK_TOKEN_META);
+  const response = await fetch(`${backendBaseUrl()}/api/token`, { cache: "no-store" });
+  const data = await response.json();
+  return NextResponse.json(data, { status: response.status });
 }

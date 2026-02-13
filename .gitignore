@@ -8,3 +8,11 @@ node_modules/
 .next/
 .env*.local
 .DS_Store
+
+/backend/.env
+
+/contracts/.env
+
+/.env
+./.env
+/.env.local

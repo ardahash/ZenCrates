@@ -1,0 +1,25 @@
+{
+  "name": "zencrates-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:l3": "hardhat run scripts/deploy-l3.ts --network horizenL3",
+    "deploy:base": "hardhat run scripts/deploy-base.ts --network base",
+    "deploy:presale": "hardhat run scripts/deploy-presale.ts --network horizenL3",
+    "deploy:eth-crates": "hardhat run scripts/deploy-eth-crates.ts --network horizenL3",
+    "deploy:local": "hardhat run scripts/deploy-local.ts --network hardhat",
+    "set:tiers": "hardhat run scripts/set-tiers.ts --network horizenL3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "5.7.3"
+  }
+}

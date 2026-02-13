@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { MOCK_TIERS } from "@/lib/mock-data";
+import { backendBaseUrl } from "@/lib/backend";
 
-// TODO: Replace with real tier configuration from contract/backend
 export async function GET() {
-  return NextResponse.json(MOCK_TIERS);
+  const response = await fetch(`${backendBaseUrl()}/api/tiers`, { cache: "no-store" });
+  const data = await response.json();
+  return NextResponse.json(data, { status: response.status });
 }

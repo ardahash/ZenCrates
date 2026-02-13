@@ -7,10 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useAppStore } from "@/lib/store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useAccount } from "wagmi";
 
 const STATUS_STYLES: Record<string, string> = {
   active: "border-zen-teal/40 text-zen-teal",
@@ -24,7 +24,7 @@ interface ProposalCardProps {
 }
 
 export function ProposalCard({ proposal }: ProposalCardProps) {
-  const { wallet } = useAppStore();
+  const { isConnected } = useAccount();
   const [expanded, setExpanded] = useState(false);
 
   const totalVotes =
@@ -145,7 +145,7 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
             <Button
               size="sm"
               onClick={() => handleVote("for")}
-              disabled={!wallet.isConnected}
+              disabled={!isConnected}
               className="flex-1 bg-zen-teal text-background hover:bg-zen-teal/90 text-xs"
             >
               Vote For
@@ -154,7 +154,7 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
               size="sm"
               variant="outline"
               onClick={() => handleVote("against")}
-              disabled={!wallet.isConnected}
+              disabled={!isConnected}
               className="flex-1 border-destructive/30 text-destructive hover:bg-destructive/10 text-xs"
             >
               Vote Against
@@ -163,7 +163,7 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
               size="sm"
               variant="outline"
               onClick={() => handleVote("abstain")}
-              disabled={!wallet.isConnected}
+              disabled={!isConnected}
               className="flex-1 border-border text-muted-foreground hover:text-foreground text-xs"
             >
               Abstain
@@ -171,7 +171,7 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
           </div>
         )}
 
-        {proposal.status === "active" && !wallet.isConnected && (
+        {proposal.status === "active" && !isConnected && (
           <p className="mt-2 text-xs text-muted-foreground text-center">
             Connect your wallet to vote.
           </p>

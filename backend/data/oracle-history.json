@@ -1,0 +1,82 @@
+{
+  "entries": {
+    "eth-usd": [
+      {
+        "timestamp": 1770952215,
+        "price": "2600"
+      },
+      {
+        "timestamp": 1770963408,
+        "price": "1934.81"
+      },
+      {
+        "timestamp": 1770963438,
+        "price": "1934.81"
+      }
+    ],
+    "zgold-index": [
+      {
+        "timestamp": 1770952220,
+        "price": "2341.5"
+      },
+      {
+        "timestamp": 1770963413,
+        "price": "118"
+      },
+      {
+        "timestamp": 1770963444,
+        "price": "118"
+      }
+    ],
+    "inflation-hedge": [
+      {
+        "timestamp": 1770952225,
+        "price": "112.45"
+      },
+      {
+        "timestamp": 1770963449,
+        "price": "324.054"
+      }
+    ],
+    "macro-stress": [
+      {
+        "timestamp": 1770952230,
+        "price": "98.2"
+      },
+      {
+        "timestamp": 1770963454,
+        "price": "100"
+      }
+    ],
+    "sp500-index": [
+      {
+        "timestamp": 1770952235,
+        "price": "5420"
+      },
+      {
+        "timestamp": 1770963459,
+        "price": "4.09"
+      }
+    ],
+    "btc-momentum": [
+      {
+        "timestamp": 1770952241,
+        "price": "145.3"
+      },
+      {
+        "timestamp": 1770963465,
+        "price": "66207.80928879"
+      }
+    ],
+    "treasury-index": [
+      {
+        "timestamp": 1770952246,
+        "price": "101.12"
+      },
+      {
+        "timestamp": 1770963470,
+        "price": "3.7"
+      }
+    ]
+  }
+}

@@ -1,8 +1,9 @@
-import type { Metadata, Viewport } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { TopNav } from "@/components/top-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { Providers } from "@/components/providers";
+import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,9 +17,26 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ZenCrates — Synthetic Exposure & Strategy Vaults",
+  title: "ZenCrates - Synthetic Exposure & Strategy Vaults",
   description:
-    "Non-custodial synthetic market exposure tokens and rules-based DeFi strategy crates on Horizen L3.",
+    "Non-custodial synthetic exposure tokens and open-data proxy indices with rules-based strategy crates on Horizen L3.",
+  icons: {
+    icon: "/zkGold-250.png",
+    apple: "/zkGold-250.png",
+  },
+  openGraph: {
+    title: "ZenCrates - Synthetic Exposure & Strategy Vaults",
+    description:
+      "Non-custodial synthetic exposure tokens and open-data proxy indices with rules-based strategy crates on Horizen L3.",
+    images: [
+      {
+        url: "/zkGold.png",
+        width: 1024,
+        height: 1024,
+        alt: "ZenCrates Logo",
+      },
+    ],
+  },
 };
 
 export const viewport: Viewport = {

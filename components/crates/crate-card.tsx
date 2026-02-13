@@ -30,12 +30,28 @@ const RISK_COLORS: Record<string, string> = {
   high: "border-destructive/40 text-destructive",
 };
 
+const CATEGORY_ACCENTS: Record<string, string> = {
+  exposure:
+    "bg-[radial-gradient(120%_120%_at_0%_0%,rgba(20,184,166,0.18)_0%,rgba(15,23,42,0)_60%)]",
+  strategy:
+    "bg-[radial-gradient(120%_120%_at_0%_0%,rgba(99,102,241,0.2)_0%,rgba(15,23,42,0)_60%)]",
+  "signal-nft":
+    "bg-[radial-gradient(120%_120%_at_0%_0%,rgba(245,158,11,0.2)_0%,rgba(15,23,42,0)_60%)]",
+};
+
 export function CrateCard({ crate }: { crate: Crate }) {
   const isPositive = crate.priceChange24h >= 0;
 
   return (
-    <Card className="border-border bg-card hover:border-zen-teal/20 transition-colors">
-      <CardHeader className="pb-3">
+    <Card className="group relative overflow-hidden border-border bg-card/90 hover:border-zen-teal/30 transition-colors">
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100",
+          CATEGORY_ACCENTS[crate.category] ?? CATEGORY_ACCENTS.exposure
+        )}
+      />
+      <div className="pointer-events-none absolute -top-24 right-[-40px] h-40 w-40 rounded-full bg-zen-teal/10 blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-80" />
+      <CardHeader className="relative z-10 pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <CardTitle className="text-foreground text-base truncate">
@@ -64,7 +80,7 @@ export function CrateCard({ crate }: { crate: Crate }) {
           {crate.description}
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative z-10">
         <div className="flex items-end justify-between mb-4">
           <div>
             <p className="text-xs text-muted-foreground">Index Price</p>

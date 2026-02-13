@@ -64,8 +64,9 @@ export function CratesBalanceCard({ rewards }: CratesBalanceCardProps) {
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        Fee rebates are discounts on protocol fees, not yield or investment
-        returns. Rates are set by governance and subject to change.
+        Fee rebates are discounts on protocol fees, not interest or
+        performance-based distributions. Rates are set by governance and
+        subject to change.
       </p>
     </div>
   );

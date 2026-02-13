@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // TODO: Replace with real contract/backend reads for program configuration
 
@@ -34,7 +34,7 @@ export function RebateProgramPanel() {
         <CardContent>
           <p className="text-sm text-muted-foreground leading-relaxed mb-4">
             The fee rebate program provides tiered fee discounts to CRATES
-            token holders. This program is controlled by governance — any
+            token holders. This program is controlled by governance - any
             changes to tiers, thresholds, or rebate percentages require a
             governance vote.
           </p>
@@ -111,8 +111,8 @@ export function RebateProgramPanel() {
           <p className="text-xs text-muted-foreground leading-relaxed">
             Rebate parameters shown above are the current governance-approved
             configuration. They can be modified via governance proposal.
-            Rebates are fee discounts/credits, not yield, dividends, or
-            investment returns. CRATES is not a security.
+            Rebates are fee discounts/credits, not interest or performance-based
+            distributions. CRATES is not a security.
           </p>
         </div>
       </div>

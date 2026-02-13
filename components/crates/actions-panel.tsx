@@ -1,10 +1,6 @@
 "use client";
 
-// TODO: Replace with real contract write calls (mint/burn/deposit/withdraw)
-// TODO: Integrate real wallet balances and slippage calculations
-
 import type { Crate } from "@/lib/types";
-import { useAppStore } from "@/lib/store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,36 +15,135 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { AlertTriangle, Wallet } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import {
+  useAccount,
+  useBalance,
+  useChainId,
+  useReadContract,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { CHAIN_IDS } from "@/lib/addresses";
+import { WalletButton } from "@/components/wallet-button";
+import { ethCollateralCrateAbi } from "@/lib/abis";
+import { formatEther, formatUnits, parseEther, parseUnits } from "viem";
 
 interface ActionsPanelProps {
   crate: Crate;
 }
 
 export function ActionsPanel({ crate }: ActionsPanelProps) {
-  const { wallet, connectWallet } = useAppStore();
+  const { address, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { switchChain, isPending: switchPending } = useSwitchChain();
+  const { data: ethBalance } = useBalance({ address });
   const [amount, setAmount] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<string>(crate.category === "exposure" ? "mint" : "deposit");
 
-  const isExposure = crate.category === "exposure";
+  const crateAddress = crate.contractAddress as `0x${string}`;
+  const hasAddress = !!crateAddress && crateAddress !== "0x0000000000000000000000000000000000000000";
+  const onHorizen = chainId === CHAIN_IDS.HORIZEN_L3;
+
+  const { data: tokenDecimals } = useReadContract({
+    address: crateAddress,
+    abi: ethCollateralCrateAbi,
+    functionName: "decimals",
+    query: { enabled: hasAddress },
+  });
+
+  const { data: tokenBalance } = useReadContract({
+    address: crateAddress,
+    abi: ethCollateralCrateAbi,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: hasAddress && !!address },
+  });
+
+  const amountWei = useMemo(() => {
+    if (!amount) return 0n;
+    try {
+      return parseEther(amount);
+    } catch {
+      return 0n;
+    }
+  }, [amount]);
+
+  const tokenAmount = useMemo(() => {
+    if (!amount) return 0n;
+    try {
+      return parseUnits(amount, tokenDecimals ?? 18);
+    } catch {
+      return 0n;
+    }
+  }, [amount, tokenDecimals]);
+
+  const isMintTab = activeTab === "mint" || activeTab === "deposit";
+
+  const { data: previewMint } = useReadContract({
+    address: crateAddress,
+    abi: ethCollateralCrateAbi,
+    functionName: "previewMint",
+    args: address ? [address, amountWei] : undefined,
+    query: { enabled: hasAddress && !!address && isMintTab && amountWei > 0n },
+  });
+
+  const { data: previewBurn } = useReadContract({
+    address: crateAddress,
+    abi: ethCollateralCrateAbi,
+    functionName: "previewBurn",
+    args: address ? [address, tokenAmount] : undefined,
+    query: { enabled: hasAddress && !!address && !isMintTab && tokenAmount > 0n },
+  });
+
+  const { writeContractAsync, data: txHash, isPending: isWritePending } = useWriteContract();
+  const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash });
 
   const handleAction = (action: string) => {
     setPendingAction(action);
     setConfirmOpen(true);
   };
 
-  const confirmAction = () => {
-    // TODO: Execute real contract write
-    toast.success(
-      `${pendingAction} submitted (placeholder). Amount: ${amount} ${crate.collateralType}`
-    );
-    setConfirmOpen(false);
-    setAmount("");
+  const confirmAction = async () => {
+    if (!hasAddress) return;
+    try {
+      if (!onHorizen) {
+        toast.error("Switch to Horizen L3 to continue.");
+        return;
+      }
+
+      if (isMintTab) {
+        if (amountWei <= 0n) return;
+        const hash = await writeContractAsync({
+          address: crateAddress,
+          abi: ethCollateralCrateAbi,
+          functionName: "mint",
+          value: amountWei,
+        });
+        toast.success(`Mint submitted: ${hash.slice(0, 10)}...`);
+      } else {
+        if (tokenAmount <= 0n) return;
+        const hash = await writeContractAsync({
+          address: crateAddress,
+          abi: ethCollateralCrateAbi,
+          functionName: "burn",
+          args: [tokenAmount],
+        });
+        toast.success(`Burn submitted: ${hash.slice(0, 10)}...`);
+      }
+
+      setConfirmOpen(false);
+      setAmount("");
+    } catch (error) {
+      toast.error("Transaction failed. Please try again.");
+    }
   };
 
-  if (!wallet.isConnected) {
+  if (!isConnected) {
     return (
       <div className="rounded-lg border border-border bg-card p-6">
         <div className="flex flex-col items-center gap-4 py-8 text-center">
@@ -59,12 +154,17 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
               To interact with this crate, connect your wallet first.
             </p>
           </div>
-          <Button
-            onClick={connectWallet}
-            className="bg-zen-teal text-background hover:bg-zen-teal/90"
-          >
-            Connect Wallet
-          </Button>
+          <WalletButton />
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAddress) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-6">
+        <div className="rounded-md bg-muted p-4 text-sm text-muted-foreground">
+          Crate contract is not deployed yet.
         </div>
       </div>
     );
@@ -76,18 +176,34 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
         <h3 className="text-foreground font-medium">Actions</h3>
         <div className="text-right">
           <p className="text-xs text-muted-foreground">Connected</p>
-          <p className="text-sm font-mono text-foreground">{wallet.address}</p>
+          <p className="text-sm font-mono text-foreground">{address}</p>
         </div>
       </div>
 
       <div className="mb-4 rounded-md bg-muted p-3">
         <p className="text-xs text-muted-foreground">Wallet Balance</p>
-        <p className="text-sm font-medium text-foreground">{wallet.balance}</p>
+        <p className="text-sm font-medium text-foreground">
+          {ethBalance ? `${Number(ethBalance.formatted).toFixed(4)} ${ethBalance.symbol}` : "—"}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">{crate.ticker} Balance</p>
+        <p className="text-sm font-medium text-foreground">
+          {tokenBalance ? Number(formatUnits(tokenBalance, tokenDecimals ?? 18)).toFixed(4) : "0.0000"}
+        </p>
       </div>
 
-      <Tabs defaultValue={isExposure ? "mint" : "deposit"}>
+      {!onHorizen && (
+        <Button
+          onClick={() => switchChain({ chainId: CHAIN_IDS.HORIZEN_L3 })}
+          disabled={switchPending}
+          className="mb-4 w-full bg-zen-teal text-background hover:bg-zen-teal/90"
+        >
+          Switch to Horizen L3
+        </Button>
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full bg-muted">
-          {isExposure ? (
+          {crate.category === "exposure" ? (
             <>
               <TabsTrigger value="mint" className="flex-1">
                 Mint
@@ -108,13 +224,15 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
           )}
         </TabsList>
 
-        {(isExposure ? ["mint", "burn"] : ["deposit", "withdraw"]).map(
+        {(crate.category === "exposure" ? ["mint", "burn"] : ["deposit", "withdraw"]).map(
           (action) => (
             <TabsContent key={action} value={action} className="mt-4">
               <div className="flex flex-col gap-4">
                 <div>
                   <Label htmlFor={`${action}-amount`} className="text-foreground text-sm">
-                    Amount ({crate.collateralType})
+                    {action === "burn" || action === "withdraw"
+                      ? `Amount (${crate.ticker})`
+                      : "Amount (ETH)"}
                   </Label>
                   <Input
                     id={`${action}-amount`}
@@ -124,6 +242,11 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
                     onChange={(e) => setAmount(e.target.value)}
                     className="mt-1.5 bg-muted border-border text-foreground font-mono"
                   />
+                </div>
+
+                <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
+                  ETH collateral only for now. USDC collateral support is planned
+                  once native USDC is available on Horizen L3.
                 </div>
 
                 <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
@@ -138,40 +261,31 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
                       %
                     </span>
                   </div>
-                  {/* TODO: Read real rebate from backend/contract based on wallet CRATES balance */}
-                  {wallet.cratesBalance > 0 && (
-                    <div className="flex justify-between text-zen-teal">
-                      <span>Your Rebate (Tier {wallet.cratesTier})</span>
-                      <span>
-                        -
-                        {wallet.cratesTier === 1
-                          ? "10"
-                          : wallet.cratesTier === 2
-                            ? "20"
-                            : wallet.cratesTier === 3
-                              ? "30"
-                              : wallet.cratesTier === 4
-                                ? "40"
-                                : "0"}
-                        %
+                  {isMintTab ? (
+                    <div className="flex justify-between">
+                      <span>Estimated {crate.ticker} minted</span>
+                      <span className="font-mono text-foreground">
+                        {previewMint ? Number(formatUnits(previewMint[0], tokenDecimals ?? 18)).toFixed(4) : "0.0000"}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span>Estimated ETH out</span>
+                      <span className="font-mono text-foreground">
+                        {previewBurn ? Number(formatEther(previewBurn[0])).toFixed(6) : "0.000000"}
                       </span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span>Slippage tolerance</span>
-                    <span>0.5%</span>
-                    {/* TODO: make configurable */}
-                  </div>
                 </div>
 
                 <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
                   <DialogTrigger asChild>
                     <Button
                       onClick={() => handleAction(action)}
-                      disabled={!amount || Number(amount) <= 0}
+                      disabled={!amount || Number(amount) <= 0 || !onHorizen || isWritePending || isConfirming}
                       className="w-full bg-zen-teal text-background hover:bg-zen-teal/90 capitalize"
                     >
-                      {action}
+                      {isWritePending || isConfirming ? "Processing…" : action}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-card border-border">
@@ -181,17 +295,17 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
                       </DialogTitle>
                       <DialogDescription className="text-muted-foreground">
                         You are about to {pendingAction} {amount}{" "}
-                        {crate.collateralType} in {crate.name}.
+                        {action === "burn" || action === "withdraw" ? crate.ticker : "ETH"} in {crate.name}.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
                       <div className="flex gap-2">
                         <AlertTriangle className="h-4 w-4 shrink-0 text-destructive mt-0.5" />
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Risk disclosure: Synthetic tokens carry smart
-                          contract risk, oracle risk, and market risk. The
-                          value of synthetic positions can go to zero. This
-                          is not investment advice.
+                          Risk disclosure: Synthetic tokens carry smart contract
+                          risk, oracle risk, and market risk. The value of
+                          synthetic positions can go to zero. This is not
+                          financial advice.
                         </p>
                       </div>
                     </div>

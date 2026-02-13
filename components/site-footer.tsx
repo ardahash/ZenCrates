@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function SiteFooter() {
@@ -7,8 +8,13 @@ export function SiteFooter() {
         <div className="grid gap-8 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-zen-teal">
-                <span className="text-xs font-bold text-background">Z</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-zen-teal/10 overflow-hidden">
+                <Image
+                  src="/zkGold-250.png"
+                  alt="ZenCrates logo"
+                  width={28}
+                  height={28}
+                />
               </div>
               <span className="text-base font-semibold text-foreground">
                 ZenCrates
@@ -16,7 +22,7 @@ export function SiteFooter() {
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
               ZenCrates provides software for on-chain synthetic exposure
-              and rules-based strategy vaults. Not investment advice. No
+              and rules-based strategy vaults. Not financial advice. No
               custody, no redemption promises.
             </p>
           </div>
@@ -81,10 +87,10 @@ export function SiteFooter() {
         <div className="mt-10 border-t border-border pt-6">
           <p className="text-xs text-muted-foreground leading-relaxed">
             ZenCrates is experimental DeFi software on Horizen L3. Use at
-            your own risk. This interface does not constitute investment
+            your own risk. This interface does not constitute financial
             advice, an offer to sell, or a solicitation of an offer to
             purchase any securities or financial instruments. Past
-            performance is not indicative of future results. Smart contract
+            performance is not indicative of future outcomes. Smart contract
             risk, oracle risk, and market risk apply.
           </p>
         </div>

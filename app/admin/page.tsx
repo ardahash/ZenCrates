@@ -3,9 +3,10 @@
 // TODO: Replace with real admin role check from contract / multisig
 // TODO: All admin actions require multisig / timelock (implemented later)
 
-import { useAppStore } from "@/lib/store";
-import { MOCK_CRATES } from "@/lib/mock-data";
-import { PLACEHOLDER_CONFIG } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
+import type { Crate } from "@/lib/types";
+import { L3_ADDRESSES } from "@/lib/addresses";
+import { backendBaseUrl } from "@/lib/backend";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,12 +41,22 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useAccount } from "wagmi";
 
 export default function AdminPage() {
-  const { wallet } = useAppStore();
+  const { address, isConnected } = useAccount();
   const [paused, setPaused] = useState(false);
+  const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
+  const isAdmin =
+    !!adminAddress && isConnected && address?.toLowerCase() === adminAddress;
 
-  if (!wallet.isConnected || !wallet.isAdmin) {
+  const { data: crates } = useQuery<Crate[]>({
+    queryKey: ["crates"],
+    queryFn: () => fetch("/api/crates").then((r) => r.json()),
+    enabled: isAdmin,
+  });
+
+  if (!isAdmin) {
     return (
       <div className="bg-background">
         <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
@@ -57,8 +68,8 @@ export default function AdminPage() {
               Access Denied
             </h1>
             <p className="mt-2 max-w-md text-muted-foreground">
-              This page requires admin access. Connect your wallet and
-              enable admin mode to access protocol management.
+              This page requires admin access. Connect your wallet with the
+              admin address to access protocol management.
             </p>
           </div>
         </div>
@@ -70,7 +81,7 @@ export default function AdminPage() {
     // TODO: Execute real pause/unpause contract call via multisig
     setPaused(!paused);
     toast.success(
-      `Protocol ${paused ? "unpaused" : "paused"} (placeholder — requires multisig)`
+      `Protocol ${paused ? "unpaused" : "paused"} (placeholder - requires multisig)`
     );
   };
 
@@ -168,7 +179,7 @@ export default function AdminPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {MOCK_CRATES.map((crate) => (
+                    {(crates ?? []).map((crate) => (
                       <TableRow key={crate.id} className="border-border">
                         <TableCell>
                           <div>
@@ -221,6 +232,13 @@ export default function AdminPage() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    {(!crates || crates.length === 0) && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-sm text-muted-foreground">
+                          No crates loaded yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -247,7 +265,7 @@ export default function AdminPage() {
                     </p>
                   </div>
                   <code className="text-xs font-mono text-muted-foreground">
-                    {PLACEHOLDER_CONFIG.CONTRACT_ADDRESSES.ORACLE_REGISTRY}
+                    {L3_ADDRESSES?.signedPriceOracle ?? "Not deployed"}
                   </code>
                 </div>
                 <div className="flex items-center justify-between rounded bg-muted px-4 py-3">
@@ -260,7 +278,7 @@ export default function AdminPage() {
                     </p>
                   </div>
                   <code className="text-xs font-mono text-muted-foreground">
-                    {PLACEHOLDER_CONFIG.ORACLE_ENDPOINT}
+                    {backendBaseUrl()}/api/prices
                   </code>
                 </div>
                 <div className="flex items-center justify-between rounded bg-muted px-4 py-3">
@@ -273,7 +291,7 @@ export default function AdminPage() {
                     </p>
                   </div>
                   <code className="text-xs font-mono text-muted-foreground">
-                    {PLACEHOLDER_CONFIG.RPC_URL}
+                    https://horizen.calderachain.xyz/http
                   </code>
                 </div>
               </div>
@@ -342,7 +360,7 @@ function CreateCrateDialog() {
           <Button
             onClick={() =>
               toast.info(
-                "Create crate submitted (placeholder — requires multisig)"
+                "Create crate submitted (placeholder - requires multisig)"
               )
             }
             className="bg-zen-teal text-background hover:bg-zen-teal/90"

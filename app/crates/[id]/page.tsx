@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
@@ -180,8 +180,8 @@ export default function CrateDetailPage() {
                   contract vulnerability, oracle manipulation or downtime,
                   collateral under-backing during extreme market conditions,
                   and liquidity risk. The value of your position can decline
-                  to zero. This is experimental DeFi software — not
-                  investment advice.
+                  to zero. This is experimental DeFi software - not
+                  financial advice.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem
