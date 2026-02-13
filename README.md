@@ -16,7 +16,7 @@ Open-data proxy crates are not official benchmarks or licensed indices.
 - FeeRebateController with tiered rebate rules and caps.
 - ExposureCrate and StrategyCrate fee logic with rebate discounting.
 - ETH-collateral crate vaults for mint/burn (ETH-only collateral for now; USDC collateral planned once native USDC is available on Horizen L3).
-- Open-data proxy indices (Treasury rate curves + CPI) or optional Massive indices feed.
+- Open-data proxy indices (Treasury rate curves + CPI) or optional Massive minute aggregates (ETF/currency proxies).
 - Governance: TimelockController + OpenZeppelin Governor wired to staking voting power.
 - Oracle: Chainlink when available, otherwise SignedPriceOracle (EIP-712) with signer threshold, max age, and deviation guard.
 
@@ -76,6 +76,7 @@ Backend env (`backend/.env`):
 - `MASSIVE_API_KEY` (optional; enables Massive indices/stock snapshots)
 - `MASSIVE_BASE_URL` (default: `https://api.massive.com`)
 - `MASSIVE_TICKER_MAP` (optional mapping: `crateId=ticker,...`)
+- `MASSIVE_THROTTLE_MS` (optional, default `12000`; used to avoid rate limits)
 
 **Contracts**
 ```bash
@@ -146,8 +147,13 @@ and 24h change calculations.
 
 `keeper:live` pulls open-data macro series (CPI and Treasury rate curves) plus
 on-chain Chainlink BTC/ETH prices from Base. If `MASSIVE_API_KEY` is set, it also
-pulls Massive index snapshots for any crate IDs mapped via `MASSIVE_TICKER_MAP`.
-The keeper writes oracle history for charts. Set `BLS_API_KEY` for higher CPI rate limits.
+pulls Massive minute aggregates for any crate IDs mapped via `MASSIVE_TICKER_MAP`
+(typically ETFs or FX pairs). The keeper writes oracle history for charts.
+Set `BLS_API_KEY` for higher CPI rate limits.
+
+Note: Massive index snapshots are gated by plan; the free plan may not include
+the indices snapshot endpoint. ETF or FX proxies via minute aggregates work
+with plans that include Minute Aggregates.
 
 If you want backend token metadata to keep staking info from L3, set:
 - `HORIZEN_STAKING_ADDRESS` (same as sCRATES contract)
@@ -181,7 +187,7 @@ Open-data proxy indices are derived from:
 - U.S. Treasury rate curve XML feeds (nominal + real rates).
 - BLS CPI-U series (`CUUR0000SA0`).
 These proxies are not official benchmarks or licensed indices. If you configure
-Massive, the keeper can source licensed index/stock snapshots instead.
+Massive, the keeper can source ETF or FX proxy prices via minute aggregates.
 
 A keeper script is available at `backend/src/keepers/signed-oracle.ts` and uses
 env vars for secure key handling.

@@ -129,6 +129,195 @@ const crateSeeds = [
     ],
     createdAt: "2025-11-01T00:00:00Z",
     isActive: true
+  },
+  {
+    id: "equity-large",
+    name: "US Equity Proxy",
+    ticker: "zSPY",
+    description: "ETF price proxy for broad US equities (SPY).",
+    longDescription:
+      "zSPY is a synthetic proxy based on SPY ETF price data. It does not represent ownership of the ETF or any custody or redemption rights.",
+    category: "exposure",
+    riskLevel: "medium",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.003, burn: 0.003, management: 0.005 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (SPY)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/SPY/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "equity-tech",
+    name: "US Tech Equity Proxy",
+    ticker: "zQQQ",
+    description: "ETF price proxy for US tech equities (QQQ).",
+    longDescription:
+      "zQQQ is a synthetic proxy based on QQQ ETF price data. It does not represent ownership of the ETF or any custody or redemption rights.",
+    category: "exposure",
+    riskLevel: "medium",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.003, burn: 0.003, management: 0.006 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (QQQ)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/QQQ/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "equity-bluechip",
+    name: "US Blue-Chip Equity Proxy",
+    ticker: "zDIA",
+    description: "ETF price proxy for US blue-chip equities (DIA).",
+    longDescription:
+      "zDIA is a synthetic proxy based on DIA ETF price data. It does not represent ownership of the ETF or any custody or redemption rights.",
+    category: "exposure",
+    riskLevel: "medium",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.003, burn: 0.003, management: 0.006 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (DIA)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/DIA/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "metal-gold",
+    name: "Gold Proxy",
+    ticker: "zGLD",
+    description: "ETF price proxy for gold (GLD).",
+    longDescription:
+      "zGLD is a synthetic proxy based on GLD ETF price data. It does not represent ownership of the ETF or any custody or redemption rights.",
+    category: "exposure",
+    riskLevel: "medium",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.003, burn: 0.003, management: 0.006 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (GLD)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/GLD/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "metal-silver",
+    name: "Silver Proxy",
+    ticker: "zSLV",
+    description: "ETF price proxy for silver (SLV).",
+    longDescription:
+      "zSLV is a synthetic proxy based on SLV ETF price data. It does not represent ownership of the ETF or any custody or redemption rights.",
+    category: "exposure",
+    riskLevel: "medium",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.004, burn: 0.004, management: 0.006 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (SLV)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/SLV/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "metal-copper",
+    name: "Copper Proxy",
+    ticker: "zCOP",
+    description: "ETF price proxy for copper (CPER).",
+    longDescription:
+      "zCOP is a synthetic proxy based on CPER ETF price data. It does not represent ownership of the ETF or any custody or redemption rights.",
+    category: "exposure",
+    riskLevel: "medium",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.004, burn: 0.004, management: 0.007 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (CPER)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/CPER/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "fx-eurusd",
+    name: "EUR/USD Proxy",
+    ticker: "zEUR",
+    description: "FX price proxy for EUR/USD.",
+    longDescription:
+      "zEUR is a synthetic proxy based on EUR/USD FX price data. It does not represent custody of currency or redemption rights.",
+    category: "exposure",
+    riskLevel: "low",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.002, burn: 0.002, management: 0.004 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (C:EURUSD)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/C:EURUSD/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "fx-gbpusd",
+    name: "GBP/USD Proxy",
+    ticker: "zGBP",
+    description: "FX price proxy for GBP/USD.",
+    longDescription:
+      "zGBP is a synthetic proxy based on GBP/USD FX price data. It does not represent custody of currency or redemption rights.",
+    category: "exposure",
+    riskLevel: "low",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.002, burn: 0.002, management: 0.004 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (C:GBPUSD)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/C:GBPUSD/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
+  },
+  {
+    id: "fx-usdjpy",
+    name: "USD/JPY Proxy",
+    ticker: "zJPY",
+    description: "FX price proxy for USD/JPY.",
+    longDescription:
+      "zJPY is a synthetic proxy based on USD/JPY FX price data. It does not represent custody of currency or redemption rights.",
+    category: "exposure",
+    riskLevel: "low",
+    collateralType: "ETH",
+    currentPrice: 0,
+    priceChange24h: 0,
+    tvl: 0,
+    fees: { mint: 0.002, burn: 0.002, management: 0.004 },
+    oracleSources: [
+      { name: "Massive Minute Aggregates (C:USDJPY)", type: "off-chain", endpoint: "api.massive.com/v2/aggs/ticker/C:USDJPY/range/1/minute" },
+      { name: "Signed Oracle", type: "off-chain", endpoint: "" }
+    ],
+    createdAt: "2026-02-13T00:00:00Z",
+    isActive: true
   }
 ];
 
