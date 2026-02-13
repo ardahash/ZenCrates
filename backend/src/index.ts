@@ -34,7 +34,7 @@ type Crate = {
     burn: number;
     management: number;
   };
-  oracleSources: Array<{ name: string; type: string; endpoint: string }>;
+  oracleSources: ReadonlyArray<{ name: string; type: string; endpoint: string }>;
   createdAt: string;
   isActive: boolean;
   contractAddress?: string;
