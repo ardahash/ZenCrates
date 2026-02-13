@@ -378,6 +378,8 @@ async function buildPrices(): Promise<PriceMap> {
 async function main() {
   const baseNonce = process.env.ORACLE_NONCE ? BigInt(process.env.ORACLE_NONCE) : 1n;
   const prices = await buildPrices();
+  const latestBlock = await provider.getBlock("latest");
+  const chainTimestamp = latestBlock?.timestamp ? Number(latestBlock.timestamp) : Math.floor(Date.now() / 1000);
 
   const ids = [
     "eth-usd",
@@ -413,20 +415,23 @@ async function main() {
     const fallbackNonce = baseNonce + BigInt(i);
     const nextNonce = targetNonce > fallbackNonce ? targetNonce : fallbackNonce;
 
+    const updateTimestamp = Math.min(Math.floor(Date.now() / 1000), chainTimestamp);
     const update = {
       crateId: crateHash,
       price: parsePrice(price),
-      timestamp: BigInt(Math.floor(Date.now() / 1000)),
+      timestamp: BigInt(updateTimestamp),
       nonce: nextNonce
     };
 
-    const signature = await wallet.signTypedData(domain, types, update);
-
-    const tx = await contract.updatePrice(update, [signature]);
-    console.log(`Sent signed price update for ${crateId}:`, tx.hash);
-    await tx.wait();
-
-    appendHistory(crateId, update.price, update.timestamp);
+    try {
+      const signature = await wallet.signTypedData(domain, types, update);
+      const tx = await contract.updatePrice(update, [signature]);
+      console.log(`Sent signed price update for ${crateId}:`, tx.hash);
+      await tx.wait();
+      appendHistory(crateId, update.price, update.timestamp);
+    } catch (error) {
+      console.warn(`Failed to update ${crateId}.`, error);
+    }
   }
 
   console.log("All updates confirmed.");
