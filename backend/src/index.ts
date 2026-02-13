@@ -44,6 +44,15 @@ type Crate = {
 const BASE_TIERS: Tier[] = TIERS.map((tier) => ({ ...tier }));
 const CRATES_DATA: Crate[] = CRATES.map((crate) => ({ ...crate }));
 
+function getEventPositionId(log: ethers.Log | ethers.EventLog): bigint | null {
+  if ("args" in log && log.args) {
+    const args = log.args as { positionId?: bigint } & Array<unknown>;
+    const positionId = (args.positionId ?? args[1]) as bigint | undefined;
+    return positionId ?? null;
+  }
+  return null;
+}
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -386,16 +395,16 @@ app.get("/api/staking", async (req, res) => {
 
   const stakedIds = new Set<string>();
   for (const log of stakedLogs) {
-    const positionId = (log.args?.positionId ?? log.args?.[1]) as bigint | undefined;
-    if (positionId !== undefined) {
+    const positionId = getEventPositionId(log);
+    if (positionId !== null) {
       stakedIds.add(positionId.toString());
     }
   }
 
   const unstakedIds = new Set<string>();
   for (const log of unstakedLogs) {
-    const positionId = (log.args?.positionId ?? log.args?.[1]) as bigint | undefined;
-    if (positionId !== undefined) {
+    const positionId = getEventPositionId(log);
+    if (positionId !== null) {
       unstakedIds.add(positionId.toString());
     }
   }
