@@ -210,8 +210,8 @@ export function StakingPanel() {
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="space-y-6">
+        <div className="space-y-4">
           <div>
             <Label htmlFor="stake-amount" className="text-sm text-foreground">
               Amount (CRATES)
@@ -290,15 +290,15 @@ export function StakingPanel() {
             </Button>
           )}
         </div>
+      </div>
 
-        <div className="rounded-md bg-muted/60 p-4 text-xs text-muted-foreground">
-          <p className="font-medium text-foreground mb-2">How it works</p>
-          <p>
-            Staking mints an sCRATES position NFT that represents your staked
-            balance. Ownership determines fee rebate eligibility and voting
-            power. Staking does not provide dividends or guaranteed results.
-          </p>
-        </div>
+      <div className="rounded-md bg-muted/60 p-4 text-xs text-muted-foreground">
+        <p className="font-medium text-foreground mb-2">How it works</p>
+        <p>
+          Staking mints an sCRATES position NFT that represents your staked
+          balance. Ownership determines fee rebate eligibility and voting
+          power. Staking does not provide dividends or guaranteed results.
+        </p>
       </div>
 
       <div className="mt-8">
