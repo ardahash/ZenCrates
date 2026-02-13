@@ -77,6 +77,7 @@ Backend env (`backend/.env`):
 - `MASSIVE_BASE_URL` (default: `https://api.massive.com`)
 - `MASSIVE_TICKER_MAP` (optional mapping: `crateId=ticker,...`)
 - `MASSIVE_THROTTLE_MS` (optional, default `12000`; used to avoid rate limits)
+- `STAKING_DEPLOY_BLOCK` (optional; improves staking event scan performance)
 
 **Contracts**
 ```bash
@@ -207,6 +208,7 @@ The backend serves the endpoints required by the frontend:
 - `GET /api/crates/:id`
 - `GET /api/prices`
 - `GET /api/portfolio`
+- `GET /api/staking?wallet=0x...`
 - `GET /api/bridge/status`
 
 The Next.js API routes proxy these calls. Configure the base URL with:

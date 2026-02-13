@@ -147,6 +147,20 @@ export interface RewardHistoryEntry {
   netFees: number;
 }
 
+export interface StakingPosition {
+  positionId: string;
+  amount: number;
+  lockEnd: number;
+  isLocked: boolean;
+}
+
+export interface StakingSummary {
+  walletAddress: string;
+  stakedBalance: number;
+  positions: StakingPosition[];
+  lastPositionId: string | null;
+}
+
 export interface BridgeStatus {
   direction: "horizenToBase" | "baseToHorizen";
   status: "idle" | "pending" | "confirming" | "complete" | "failed";

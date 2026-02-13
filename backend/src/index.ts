@@ -70,7 +70,12 @@ const erc20Abi = [
   "function balanceOf(address) view returns (uint256)",
   "function decimals() view returns (uint8)"
 ];
-const stakingAbi = ["function stakedBalanceOf(address) view returns (uint256)"];
+const stakingAbi = [
+  "function stakedBalanceOf(address) view returns (uint256)",
+  "function positionInfo(uint256) view returns (uint256 amount, uint64 lockEnd)",
+  "event Staked(address indexed user, uint256 indexed positionId, uint256 amount)",
+  "event Unstaked(address indexed user, uint256 indexed positionId, uint256 amount)"
+];
 const rebateAbi = [
   "function tiers() view returns ((uint256 minAmount,uint16 rebateBps)[])",
   "function maxRebateBps() view returns (uint16)"
@@ -360,6 +365,72 @@ app.get("/api/portfolio", async (req, res) => {
     totalPnl: 0,
     totalPnlPercent: 0,
     positions: filtered
+  });
+});
+
+app.get("/api/staking", async (req, res) => {
+  const wallet = typeof req.query.wallet === "string" ? req.query.wallet : DEFAULT_WALLET;
+  if (!staking || !stakingAddress || !ethers.isAddress(wallet)) {
+    res.json({ walletAddress: wallet, stakedBalance: 0, positions: [], lastPositionId: null });
+    return;
+  }
+
+  const fromBlock = Number(process.env.STAKING_DEPLOY_BLOCK || 0);
+  const nowSec = Math.floor(Date.now() / 1000);
+
+  const [stakedBalanceRaw, stakedLogs, unstakedLogs] = await Promise.all([
+    staking.stakedBalanceOf(wallet),
+    staking.queryFilter(staking.filters.Staked(wallet), fromBlock, "latest"),
+    staking.queryFilter(staking.filters.Unstaked(wallet), fromBlock, "latest")
+  ]);
+
+  const stakedIds = new Set<string>();
+  for (const log of stakedLogs) {
+    const positionId = (log.args?.positionId ?? log.args?.[1]) as bigint | undefined;
+    if (positionId !== undefined) {
+      stakedIds.add(positionId.toString());
+    }
+  }
+
+  const unstakedIds = new Set<string>();
+  for (const log of unstakedLogs) {
+    const positionId = (log.args?.positionId ?? log.args?.[1]) as bigint | undefined;
+    if (positionId !== undefined) {
+      unstakedIds.add(positionId.toString());
+    }
+  }
+
+  const candidateIds = [...stakedIds].filter((id) => !unstakedIds.has(id));
+
+  const positions = (
+    await Promise.all(
+      candidateIds.map(async (id) => {
+        try {
+          const info = await staking.positionInfo(id);
+          const amount = Number(ethers.formatUnits(info.amount, 18));
+          const lockEnd = Number(info.lockEnd);
+          return {
+            positionId: id,
+            amount,
+            lockEnd,
+            isLocked: lockEnd > 0 && lockEnd > nowSec
+          };
+        } catch {
+          return null;
+        }
+      })
+    )
+  ).filter(Boolean) as Array<{ positionId: string; amount: number; lockEnd: number; isLocked: boolean }>;
+
+  positions.sort((a, b) => Number(a.positionId) - Number(b.positionId));
+
+  const lastPositionId = positions.length ? positions[positions.length - 1].positionId : null;
+
+  res.json({
+    walletAddress: wallet,
+    stakedBalance: Number(ethers.formatUnits(stakedBalanceRaw, 18)),
+    positions,
+    lastPositionId
   });
 });
 

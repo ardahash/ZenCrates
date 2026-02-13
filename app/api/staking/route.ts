@@ -3,7 +3,7 @@ import { backendBaseUrl } from "@/lib/backend";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const response = await fetch(`${backendBaseUrl()}/api/portfolio${url.search}`, {
+  const response = await fetch(`${backendBaseUrl()}/api/staking${url.search}`, {
     cache: "no-store",
   });
   const data = await response.json();

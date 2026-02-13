@@ -65,6 +65,64 @@ export const erc20Abi = [
     inputs: [],
     outputs: [{ type: "string" }],
   },
+  {
+    type: "function",
+    name: "allowance",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "approve",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+  },
+] as const;
+
+export const stakingAbi = [
+  {
+    type: "function",
+    name: "stake",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "amount", type: "uint256" },
+      { name: "lockDuration", type: "uint64" },
+      { name: "positionId", type: "uint256" },
+    ],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "unstake",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "positionId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "stakedBalanceOf",
+    stateMutability: "view",
+    inputs: [{ name: "account", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "positionInfo",
+    stateMutability: "view",
+    inputs: [{ name: "positionId", type: "uint256" }],
+    outputs: [
+      { name: "amount", type: "uint256" },
+      { name: "lockEnd", type: "uint64" },
+    ],
+  },
 ] as const;
 
 export const ethCollateralCrateAbi = [

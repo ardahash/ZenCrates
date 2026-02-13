@@ -9,6 +9,7 @@ import { Wallet, AlertTriangle, Percent, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useAccount } from "wagmi";
 import { WalletButton } from "@/components/wallet-button";
+import { StakingPanel } from "@/components/staking/staking-panel";
 
 export default function RewardsPage() {
   const { address, isConnected } = useAccount();
@@ -114,6 +115,13 @@ export default function RewardsPage() {
               View tier structure and increase your rebate
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
+
+            <div>
+              <h2 className="mb-4 text-lg font-semibold text-foreground">
+                Stake CRATES
+              </h2>
+              <StakingPanel />
+            </div>
 
             {/* History table */}
             <div>

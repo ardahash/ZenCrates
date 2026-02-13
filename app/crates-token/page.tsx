@@ -10,6 +10,7 @@ import { YourTierCard } from "@/components/token/your-tier-card";
 import { BuyModule } from "@/components/token/buy-module";
 import { BridgeModule } from "@/components/token/bridge-module";
 import { TokenInfoPanel } from "@/components/token/token-info-panel";
+import { StakingPanel } from "@/components/staking/staking-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Shield, Vote, Percent } from "lucide-react";
 import { useAccount } from "wagmi";
@@ -138,6 +139,7 @@ export default function CratesTokenPage() {
                   isLoading={rewardsLoading}
                 />
               )}
+              <StakingPanel />
               <BuyModule />
               <BridgeModule />
               {token && <TokenInfoPanel token={token} />}
