@@ -78,6 +78,7 @@ Backend env (`backend/.env`):
 - `MASSIVE_TICKER_MAP` (optional mapping: `crateId=ticker,...`)
 - `MASSIVE_THROTTLE_MS` (optional, default `12000`; used to avoid rate limits)
 - `STAKING_DEPLOY_BLOCK` (optional; improves staking event scan performance)
+- `CRATE_DEPLOY_BLOCK` (optional; improves portfolio event scan performance)
 
 **Contracts**
 ```bash

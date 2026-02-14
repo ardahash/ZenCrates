@@ -77,7 +77,9 @@ const rebateControllerAddress = process.env.FEE_REBATE_CONTROLLER_ADDRESS || "";
 const oracleAbi = ["function getPrice(bytes32) view returns (uint256,uint256)"];
 const erc20Abi = [
   "function balanceOf(address) view returns (uint256)",
-  "function decimals() view returns (uint8)"
+  "function decimals() view returns (uint8)",
+  "event Minted(address indexed user, uint256 ethIn, uint256 tokensOut, uint256 feeEth)",
+  "event Burned(address indexed user, uint256 tokensIn, uint256 ethOut, uint256 feeEth)"
 ];
 const stakingAbi = [
   "function stakedBalanceOf(address) view returns (uint256)",
@@ -112,6 +114,18 @@ const historyPath =
 const defaultTierLabels = BASE_TIERS.map((tier) => tier.label);
 
 let cachedTiers: { data: Tier[]; fetchedAt: number } | null = null;
+
+function getPriceAt(crateId: string, timestampSec: number, fallback: number) {
+  const history = getHistory(crateId);
+  if (history.length === 0) return fallback;
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+    if (entry.timestamp <= timestampSec) {
+      return Number(entry.price);
+    }
+  }
+  return Number(history[0].price);
+}
 
 function normalizeCrateId(id: string) {
   return id.startsWith("0x") && id.length === 66 ? id : ethers.id(id);
@@ -325,11 +339,27 @@ app.get("/api/portfolio", async (req, res) => {
     return;
   }
 
+  const crateFromBlock = Number(process.env.CRATE_DEPLOY_BLOCK || 0);
+  const blockTimeCache = new Map<number, number>();
+  const nowSec = Math.floor(Date.now() / 1000);
+  const ethUsdNow = await fetchOraclePrice(ethOracleId);
+  const ethUsdPriceNow = formatPrice(ethUsdNow.price, ethPriceDecimals);
+
   const prices = new Map<string, number>();
   for (const crate of CRATES_DATA) {
     const price = await fetchOraclePrice(crate.id);
     prices.set(crate.id, formatPrice(price.price, priceDecimals));
   }
+
+  const getBlockTimestamp = async (blockNumber: number) => {
+    if (blockTimeCache.has(blockNumber)) {
+      return blockTimeCache.get(blockNumber)!;
+    }
+    const block = await provider.getBlock(blockNumber);
+    const ts = block?.timestamp ? Number(block.timestamp) : nowSec;
+    blockTimeCache.set(blockNumber, ts);
+    return ts;
+  };
 
   const positions = await Promise.all(
     CRATES_DATA.map(async (crate) => {
@@ -353,6 +383,51 @@ app.get("/api/portfolio", async (req, res) => {
       const balance = Number(ethers.formatUnits(balanceRaw, decimals));
       const price = prices.get(crate.id) ?? 0;
       const value = balance * price;
+
+      let pnl = 0;
+      let pnlPercent = 0;
+
+      if (balance > 0) {
+        const [mintLogs, burnLogs] = await Promise.all([
+          contract.queryFilter(contract.filters.Minted(wallet), crateFromBlock, "latest"),
+          contract.queryFilter(contract.filters.Burned(wallet), crateFromBlock, "latest")
+        ]);
+
+        let totalTokens = 0;
+        let costUsd = 0;
+
+        for (const log of mintLogs) {
+          if (!("args" in log) || !log.args) continue;
+          const args = log.args as { ethIn: bigint; tokensOut: bigint; feeEth: bigint } & Array<unknown>;
+          const ethIn = args.ethIn ?? (args[1] as bigint);
+          const tokensOut = args.tokensOut ?? (args[2] as bigint);
+          const feeEth = args.feeEth ?? (args[3] as bigint);
+          const netEth = ethIn - feeEth;
+          const ts = await getBlockTimestamp(log.blockNumber);
+          const ethUsdAt = getPriceAt("eth-usd", ts, ethUsdPriceNow);
+          costUsd += Number(ethers.formatEther(netEth)) * ethUsdAt;
+          totalTokens += Number(ethers.formatUnits(tokensOut, decimals));
+        }
+
+        for (const log of burnLogs) {
+          if (!("args" in log) || !log.args) continue;
+          const args = log.args as { tokensIn: bigint; ethOut: bigint; feeEth: bigint } & Array<unknown>;
+          const tokensIn = args.tokensIn ?? (args[1] as bigint);
+          const ethOut = args.ethOut ?? (args[2] as bigint);
+          const ts = await getBlockTimestamp(log.blockNumber);
+          const ethUsdAt = getPriceAt("eth-usd", ts, ethUsdPriceNow);
+          costUsd -= Number(ethers.formatEther(ethOut)) * ethUsdAt;
+          totalTokens -= Number(ethers.formatUnits(tokensIn, decimals));
+        }
+
+        if (totalTokens > 0 && costUsd > 0) {
+          const averageCost = costUsd / totalTokens;
+          const costBasis = averageCost * balance;
+          pnl = value - costBasis;
+          pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
+        }
+      }
+
       return {
         crateId: crate.id,
         crateName: crate.name,
@@ -360,8 +435,8 @@ app.get("/api/portfolio", async (req, res) => {
         category: crate.category,
         balance,
         value,
-        pnl: 0,
-        pnlPercent: 0
+        pnl,
+        pnlPercent
       };
     })
   );

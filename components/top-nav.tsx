@@ -9,23 +9,20 @@ import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useAccount } from "wagmi";
 
 const NAV_LINKS = [
   { href: "/crates", label: "Explore" },
   { href: "/crates-token", label: "CRATES" },
   { href: "/rewards", label: "Rewards" },
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/stats", label: "Stats" },
   { href: "/governance", label: "Governance" },
   { href: "#", label: "Docs", disabled: true }, // TODO: link to real docs
 ];
 
 export function TopNav() {
   const pathname = usePathname();
-  const { address } = useAccount();
   const [open, setOpen] = useState(false);
-  const adminAddress = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
-  const isAdmin = adminAddress && address?.toLowerCase() === adminAddress;
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
@@ -69,19 +66,7 @@ export function TopNav() {
                 )}
               </Link>
             ))}
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  pathname === "/admin"
-                    ? "text-zen-teal"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Admin
-              </Link>
-            )}
+            
           </nav>
         </div>
 
@@ -121,20 +106,7 @@ export function TopNav() {
                   {link.label}
                 </Link>
               ))}
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "rounded-md px-4 py-3 text-sm font-medium transition-colors",
-                    pathname === "/admin"
-                      ? "bg-zen-teal/10 text-zen-teal"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  Admin
-                </Link>
-              )}
+              
               <div className="mt-4 px-4">
                 <WalletButton />
               </div>

@@ -50,6 +50,14 @@ export function SiteFooter() {
               </li>
               <li>
                 <Link
+                  href="/stats"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Stats
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/governance"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
