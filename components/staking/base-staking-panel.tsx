@@ -290,7 +290,7 @@ export function BaseStakingPanel() {
         <p className="font-medium text-foreground mb-2">How it works</p>
         <p>
           Base staking mints a wCRATES position NFT. For L3 rebates and governance,
-          bridge to Horizen L3 and stake CRATES there.
+          stake CRATES directly on Horizen L3.
         </p>
       </div>
 

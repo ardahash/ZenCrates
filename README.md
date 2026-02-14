@@ -52,7 +52,6 @@ Frontend env (`.env.local`):
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (WalletConnect Cloud project id)
 - `NEXT_PUBLIC_ADMIN_ADDRESS` (optional, enables admin UI for that address)
 - `NEXT_PUBLIC_BACKEND_URL` (optional, defaults to `http://localhost:4000`)
-- `NEXT_PUBLIC_BRIDGE_URL` (optional, defaults to `https://horizen.hub.caldera.xyz`)
 
 **Backend**
 ```bash

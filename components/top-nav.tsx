@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const NAV_LINKS = [
   { href: "/crates", label: "Explore" },
   { href: "/crates-token", label: "CRATES" },
-  { href: "/rewards", label: "Rewards" },
+  { href: "/rewards", label: "Stake ZEN" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/stats", label: "Stats" },
   { href: "/governance", label: "Governance" },
