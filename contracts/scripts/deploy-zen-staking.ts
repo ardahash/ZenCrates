@@ -1,4 +1,6 @@
 import { ethers } from "hardhat";
+import fs from "fs";
+import path from "path";
 import { writeAddresses, writeBackendTokenData } from "./utils";
 
 const DEFAULT_CRATES_PER_ZEN = "100000";
@@ -52,6 +54,28 @@ async function main() {
   const baseCratesAddress = process.env.BASE_CRATES_ADDRESS || "0x0000000000000000000000000000000000000000";
   const totalSupply = process.env.CRATES_TOTAL_SUPPLY || "0";
 
+  let existingStaking: { stakingAddress: string; sCratesAddress: string; explorerUrl: string } | undefined;
+  const addressesPath = path.resolve(__dirname, "../../frontend-bridge/addresses.json");
+  if (fs.existsSync(addressesPath)) {
+    try {
+      const raw = fs.readFileSync(addressesPath, "utf8");
+      const parsed = raw.trim().length ? JSON.parse(raw) : {};
+      const existing = parsed[String(chainId)];
+      if (existing?.staking) {
+        const explorerUrl = explorerBase
+          ? `${explorerBase}/address/${existing.staking}`
+          : "";
+        existingStaking = {
+          stakingAddress: existing.staking,
+          sCratesAddress: existing.staking,
+          explorerUrl
+        };
+      }
+    } catch {
+      // no-op: if parsing fails we'll just omit staking block
+    }
+  }
+
   writeBackendTokenData({
     horizen: {
       chainId,
@@ -64,6 +88,7 @@ async function main() {
       explorerUrl: baseExplorer ? `${baseExplorer}/address/${baseCratesAddress}` : ""
     },
     totalSupply,
+    staking: existingStaking,
     zenToken: {
       address: zenToken,
       explorerUrl: explorerBase ? `${explorerBase}/address/${zenToken}` : ""

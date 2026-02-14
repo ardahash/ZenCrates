@@ -433,7 +433,7 @@ app.get("/api/portfolio", async (req, res) => {
     return ts;
   };
 
-  const positions = await Promise.all(
+  const positionsWithCost = await Promise.all(
     CRATES_DATA.map(async (crate) => {
       if (!crate.contractAddress || crate.contractAddress === "0x0000000000000000000000000000000000000000") {
         return {
@@ -444,7 +444,8 @@ app.get("/api/portfolio", async (req, res) => {
           balance: 0,
           value: 0,
           pnl: 0,
-          pnlPercent: 0
+          pnlPercent: 0,
+          costBasis: 0
         };
       }
       const contract = new ethers.Contract(crate.contractAddress, erc20Abi, provider);
@@ -458,6 +459,7 @@ app.get("/api/portfolio", async (req, res) => {
 
       let pnl = 0;
       let pnlPercent = 0;
+      let costBasis = 0;
 
       if (balance > 0) {
         const [mintLogs, burnLogs] = await Promise.all([
@@ -494,7 +496,7 @@ app.get("/api/portfolio", async (req, res) => {
 
         if (totalTokens > 0 && costUsd > 0) {
           const averageCost = costUsd / totalTokens;
-          const costBasis = averageCost * balance;
+          costBasis = averageCost * balance;
           pnl = value - costBasis;
           pnlPercent = costBasis > 0 ? (pnl / costBasis) * 100 : 0;
         }
@@ -508,19 +510,23 @@ app.get("/api/portfolio", async (req, res) => {
         balance,
         value,
         pnl,
-        pnlPercent
+        pnlPercent,
+        costBasis
       };
     })
   );
 
-  const filtered = positions.filter((pos) => pos.balance > 0);
+  const filtered = positionsWithCost.filter((pos) => pos.balance > 0);
   const totalValue = filtered.reduce((acc, pos) => acc + pos.value, 0);
+  const totalCostBasis = filtered.reduce((acc, pos) => acc + (pos.costBasis ?? 0), 0);
+  const totalPnl = filtered.reduce((acc, pos) => acc + pos.pnl, 0);
+  const totalPnlPercent = totalCostBasis > 0 ? (totalPnl / totalCostBasis) * 100 : 0;
 
   res.json({
     totalValue,
-    totalPnl: 0,
-    totalPnlPercent: 0,
-    positions: filtered
+    totalPnl,
+    totalPnlPercent,
+    positions: filtered.map(({ costBasis, ...pos }) => pos)
   });
 });
 
