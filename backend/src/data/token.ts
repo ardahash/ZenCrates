@@ -15,6 +15,16 @@ export const TOKEN_META = {
       chainId: 8453
     }
   },
+  staking: {
+    contractAddress: "0xE8858eF5E1421bc49F075d2eFf41B04ac3794fDD",
+    explorerUrl: "https://horizen.calderaexplorer.xyz/address/0xE8858eF5E1421bc49F075d2eFf41B04ac3794fDD",
+    sCrates: {
+      name: "Staked CRATES",
+      symbol: "sCRATES",
+      standard: "ERC-721",
+      address: "0xE8858eF5E1421bc49F075d2eFf41B04ac3794fDD"
+    }
+  },
   zen: {
     symbol: "ZEN",
     address: "0x57da2D504bf8b83Ef304759d9f2648522D7a9280",
