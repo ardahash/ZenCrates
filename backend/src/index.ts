@@ -93,7 +93,10 @@ const rebateAbi = [
 ];
 
 const oracle = oracleAddress ? new ethers.Contract(oracleAddress, oracleAbi, provider) : null;
-const stakingAddress = TOKEN_META.staking?.contractAddress || "";
+const stakingAddress =
+  process.env.HORIZEN_STAKING_ADDRESS ||
+  (TOKEN_META as { staking?: { contractAddress: string } }).staking?.contractAddress ||
+  "";
 const staking = stakingAddress ? new ethers.Contract(stakingAddress, stakingAbi, provider) : null;
 const rebateController = rebateControllerAddress
   ? new ethers.Contract(rebateControllerAddress, rebateAbi, provider)
@@ -467,10 +470,10 @@ app.get("/api/portfolio", async (req, res) => {
 
         for (const log of mintLogs) {
           if (!("args" in log) || !log.args) continue;
-          const args = log.args as { ethIn: bigint; tokensOut: bigint; feeEth: bigint } & Array<unknown>;
-          const ethIn = args.ethIn ?? (args[1] as bigint);
-          const tokensOut = args.tokensOut ?? (args[2] as bigint);
-          const feeEth = args.feeEth ?? (args[3] as bigint);
+          const args = log.args as unknown as { ethIn?: bigint; tokensOut?: bigint; feeEth?: bigint } & Array<unknown>;
+          const ethIn = (args.ethIn ?? args[1]) as bigint;
+          const tokensOut = (args.tokensOut ?? args[2]) as bigint;
+          const feeEth = (args.feeEth ?? args[3]) as bigint;
           const netEth = ethIn - feeEth;
           const ts = await getBlockTimestamp(log.blockNumber);
           const ethUsdAt = getPriceAt("eth-usd", ts, ethUsdPriceNow);
@@ -480,9 +483,9 @@ app.get("/api/portfolio", async (req, res) => {
 
         for (const log of burnLogs) {
           if (!("args" in log) || !log.args) continue;
-          const args = log.args as { tokensIn: bigint; ethOut: bigint; feeEth: bigint } & Array<unknown>;
-          const tokensIn = args.tokensIn ?? (args[1] as bigint);
-          const ethOut = args.ethOut ?? (args[2] as bigint);
+          const args = log.args as unknown as { tokensIn?: bigint; ethOut?: bigint; feeEth?: bigint } & Array<unknown>;
+          const tokensIn = (args.tokensIn ?? args[1]) as bigint;
+          const ethOut = (args.ethOut ?? args[2]) as bigint;
           const ts = await getBlockTimestamp(log.blockNumber);
           const ethUsdAt = getPriceAt("eth-usd", ts, ethUsdPriceNow);
           costUsd -= Number(ethers.formatEther(ethOut)) * ethUsdAt;
