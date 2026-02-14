@@ -7,7 +7,9 @@
     "test": "hardhat test",
     "deploy:l3": "hardhat run scripts/deploy-l3.ts --network horizenL3",
     "deploy:base": "hardhat run scripts/deploy-base.ts --network base",
+    "deploy:base-staking": "hardhat run scripts/deploy-base-staking.ts --network base",
     "deploy:presale": "hardhat run scripts/deploy-presale.ts --network horizenL3",
+    "deploy:zen-staking": "hardhat run scripts/deploy-zen-staking.ts --network horizenL3",
     "deploy:eth-crates": "hardhat run scripts/deploy-eth-crates.ts --network horizenL3",
     "deploy:local": "hardhat run scripts/deploy-local.ts --network hardhat",
     "set:tiers": "hardhat run scripts/set-tiers.ts --network horizenL3"

@@ -8,9 +8,11 @@ import type { RewardSummary, TokenMeta, TierRule } from "@/lib/types";
 import { TierTable } from "@/components/token/tier-table";
 import { YourTierCard } from "@/components/token/your-tier-card";
 import { BuyModule } from "@/components/token/buy-module";
+import { ZenStakingModule } from "@/components/token/zen-staking-module";
 import { BridgeModule } from "@/components/token/bridge-module";
 import { TokenInfoPanel } from "@/components/token/token-info-panel";
 import { StakingPanel } from "@/components/staking/staking-panel";
+import { BaseStakingPanel } from "@/components/staking/base-staking-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Shield, Vote, Percent } from "lucide-react";
 import { useAccount } from "wagmi";
@@ -141,7 +143,9 @@ export default function CratesTokenPage() {
               )}
               <StakingPanel />
               <BuyModule />
+              <ZenStakingModule />
               <BridgeModule />
+              <BaseStakingPanel />
               {token && <TokenInfoPanel token={token} />}
             </div>
           </div>

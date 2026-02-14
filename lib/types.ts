@@ -119,6 +119,16 @@ export interface TokenMeta {
       address: string;
     };
   };
+  zen?: {
+    symbol: string;
+    address: string;
+    explorerUrl: string;
+  };
+  zenStaking?: {
+    contractAddress: string;
+    explorerUrl: string;
+    unstakeFeeBps?: number;
+  };
 }
 
 export interface TierRule {

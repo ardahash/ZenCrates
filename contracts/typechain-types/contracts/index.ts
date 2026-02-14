@@ -16,3 +16,4 @@ export type { CratesToken } from "./CratesToken";
 export type { FeeRebateController } from "./FeeRebateController";
 export type { StakedCrates } from "./StakedCrates";
 export type { WrappedCrates } from "./WrappedCrates";
+export type { ZenStakingPool } from "./ZenStakingPool";

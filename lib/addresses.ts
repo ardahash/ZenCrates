@@ -4,6 +4,8 @@ export interface ChainAddresses {
   name: string;
   chainId: number;
   cratesToken?: string;
+  zenToken?: string;
+  zenStaking?: string;
   staking?: string;
   feeRebateController?: string;
   signedPriceOracle?: string;
@@ -14,6 +16,7 @@ export interface ChainAddresses {
   timelock?: string;
   wrappedCrates?: string;
   crates?: Record<string, string>;
+  baseStaking?: string;
 }
 
 interface AddressesFile {

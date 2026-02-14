@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "keeper:signed": "tsx src/keepers/signed-oracle.ts",
-    "keeper:live": "tsx src/keepers/live-oracle.ts"
+    "keeper:live": "tsx src/keepers/live-oracle.ts",
+    "keeper:zen-rewards": "tsx src/keepers/zen-rewards.ts"
   },
   "dependencies": {
     "cors": "^2.8.5",

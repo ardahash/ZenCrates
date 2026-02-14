@@ -5,7 +5,10 @@ export type ChainAddresses = {
   name: string;
   chainId: number;
   cratesToken?: string;
+  zenToken?: string;
+  zenStaking?: string;
   wrappedCrates?: string;
+  baseStaking?: string;
   staking?: string;
   feeRebateController?: string;
   signedPriceOracle?: string;
@@ -41,12 +44,20 @@ export function writeBackendTokenData(params: {
   base: { chainId: number; address: string; explorerUrl: string };
   totalSupply: string;
   staking?: { stakingAddress: string; sCratesAddress: string; explorerUrl: string };
+  zenToken?: { address: string; explorerUrl: string };
+  zenStaking?: { contractAddress: string; explorerUrl: string; unstakeFeeBps?: number };
 }) {
   const filePath = path.resolve(__dirname, "../../backend/src/data/token.ts");
   const stakingBlock = params.staking
     ? `,\n  staking: {\n    contractAddress: "${params.staking.stakingAddress}",\n    explorerUrl: "${params.staking.explorerUrl}",\n    sCrates: {\n      name: "Staked CRATES",\n      symbol: "sCRATES",\n      standard: "ERC-721",\n      address: "${params.staking.sCratesAddress}"\n    }\n  }`
     : "";
-  const contents = `export const TOKEN_META = {\n  name: "Crates",\n  symbol: "CRATES",\n  decimals: 18,\n  totalSupply: "${params.totalSupply}",\n  chains: {\n    horizenL3: {\n      address: "${params.horizen.address}",\n      explorerUrl: "${params.horizen.explorerUrl}",\n      chainId: ${params.horizen.chainId}\n    },\n    base: {\n      address: "${params.base.address}",\n      explorerUrl: "${params.base.explorerUrl}",\n      chainId: ${params.base.chainId}\n    }\n  }${stakingBlock}\n} as const;\n`;
+  const zenBlock = params.zenToken
+    ? `,\n  zen: {\n    symbol: "ZEN",\n    address: "${params.zenToken.address}",\n    explorerUrl: "${params.zenToken.explorerUrl}"\n  }`
+    : "";
+  const zenStakingBlock = params.zenStaking
+    ? `,\n  zenStaking: {\n    contractAddress: "${params.zenStaking.contractAddress}",\n    explorerUrl: "${params.zenStaking.explorerUrl}",\n    unstakeFeeBps: ${params.zenStaking.unstakeFeeBps ?? 0}\n  }`
+    : "";
+  const contents = `export const TOKEN_META = {\n  name: "Crates",\n  symbol: "CRATES",\n  decimals: 18,\n  totalSupply: "${params.totalSupply}",\n  chains: {\n    horizenL3: {\n      address: "${params.horizen.address}",\n      explorerUrl: "${params.horizen.explorerUrl}",\n      chainId: ${params.horizen.chainId}\n    },\n    base: {\n      address: "${params.base.address}",\n      explorerUrl: "${params.base.explorerUrl}",\n      chainId: ${params.base.chainId}\n    }\n  }${stakingBlock}${zenBlock}${zenStakingBlock}\n} as const;\n`;
 
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, contents);

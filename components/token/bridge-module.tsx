@@ -1,8 +1,5 @@
 "use client";
 
-// TODO: Wire to real bridge contract / relayer
-// TODO: Integrate wallet chain switching
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,14 +14,16 @@ import { ArrowRight, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BRIDGE_STEPS = [
-  { step: 1, label: "Approve CRATES for bridge contract", status: "pending" },
-  { step: 2, label: "Initiate bridge transaction", status: "pending" },
-  { step: 3, label: "Wait for relayer confirmation", status: "pending" },
-  { step: 4, label: "Receive bridged CRATES on destination", status: "pending" },
+  { step: 1, label: "Open the official bridge hub", status: "pending" },
+  { step: 2, label: "Approve CRATES for bridging", status: "pending" },
+  { step: 3, label: "Confirm the bridge transaction", status: "pending" },
+  { step: 4, label: "Receive CRATES on destination", status: "pending" },
 ] as const;
 
 export function BridgeModule() {
   const [open, setOpen] = useState(false);
+  const bridgeUrl =
+    process.env.NEXT_PUBLIC_BRIDGE_URL || "https://horizen.hub.caldera.xyz";
 
   return (
     <div className="rounded-lg border border-border bg-card p-6">
@@ -48,8 +47,8 @@ export function BridgeModule() {
           <DialogHeader>
             <DialogTitle className="text-foreground">Bridge CRATES</DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              Bridging is not yet available. The steps below illustrate the
-              planned process.
+              Bridging uses the official Caldera bridge hub. Token-level 1:1
+              bridging requires MetaToken configuration for CRATES.
             </DialogDescription>
           </DialogHeader>
 
@@ -86,10 +85,12 @@ export function BridgeModule() {
           </div>
 
           <Button
-            disabled
-            className="w-full bg-muted text-muted-foreground cursor-not-allowed mt-2"
+            asChild
+            className="w-full bg-zen-teal text-background hover:bg-zen-teal/90 mt-2"
           >
-            Bridging coming soon
+            <a href={bridgeUrl} target="_blank" rel="noopener noreferrer">
+              Open Official Bridge
+            </a>
           </Button>
         </DialogContent>
       </Dialog>

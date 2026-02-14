@@ -1,0 +1,6 @@
+await pool.grantRole(CONFIG_ROLE, "0x3A5f7c7f2E0C9219FB0C3A24057d328f6A4680d9");
+const CONFIG_ROLE = ethers.keccak256(ethers.toUtf8Bytes("CONFIG_ROLE"));
+const pool = await ethers.getContractAt("ZenStakingPool", "0xe3587460770EFF47d26F9545fC64bb51F3768D2E");
+await pool.grantRole(CONFIG_ROLE, "0xYOUR_KEEPER_WALLET");
+const CONFIG_ROLE = ethers.keccak256(ethers.toUtf8Bytes("CONFIG_ROLE"));
+const pool = await ethers.getContractAt("ZenStakingPool", "0xe3587460770EFF47d26F9545fC64bb51F3768D2E");

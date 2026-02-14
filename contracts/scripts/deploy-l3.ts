@@ -422,11 +422,13 @@ async function main() {
   const baseExplorer = process.env.BASE_EXPLORER || "";
   const baseChainId = Number(process.env.BASE_CHAIN_ID || 8453);
   const baseCratesAddress = process.env.BASE_CRATES_ADDRESS || "0x0000000000000000000000000000000000000000";
+  const zenToken = process.env.ZEN_TOKEN_ADDRESS || "";
 
   writeAddresses(chainId, {
     name: "Horizen L3",
     chainId,
     cratesToken: await crates.getAddress(),
+    ...(zenToken ? { zenToken } : {}),
     staking: await staking.getAddress(),
     feeRebateController: await controller.getAddress(),
     signedPriceOracle: await signedOracle.getAddress(),

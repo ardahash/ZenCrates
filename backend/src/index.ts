@@ -99,6 +99,13 @@ const rebateController = rebateControllerAddress
   ? new ethers.Contract(rebateControllerAddress, rebateAbi, provider)
   : null;
 
+const baseRpcUrl = process.env.BASE_RPC_URL || "https://mainnet.base.org";
+const baseProvider = new ethers.JsonRpcProvider(baseRpcUrl);
+const baseStakingAddress = process.env.BASE_STAKING_ADDRESS || "";
+const baseStaking = baseStakingAddress
+  ? new ethers.Contract(baseStakingAddress, stakingAbi, baseProvider)
+  : null;
+
 const priceDecimals = Number(process.env.ORACLE_PRICE_DECIMALS || 8);
 const ethPriceDecimals = Number(process.env.ETH_PRICE_DECIMALS || priceDecimals);
 const ethOracleIdInput = process.env.ETH_USD_ORACLE_ID || "eth-usd";
@@ -195,6 +202,68 @@ function resolveTier(balance: number, tiers: Tier[]) {
     }
   }
   return current;
+}
+
+async function buildStakingSummary(
+  contract: ethers.Contract,
+  wallet: string,
+  fromBlock: number
+) {
+  const nowSec = Math.floor(Date.now() / 1000);
+
+  const [stakedBalanceRaw, stakedLogs, unstakedLogs] = await Promise.all([
+    contract.stakedBalanceOf(wallet),
+    contract.queryFilter(contract.filters.Staked(wallet), fromBlock, "latest"),
+    contract.queryFilter(contract.filters.Unstaked(wallet), fromBlock, "latest")
+  ]);
+
+  const stakedIds = new Set<string>();
+  for (const log of stakedLogs) {
+    const positionId = getEventPositionId(log);
+    if (positionId !== null) {
+      stakedIds.add(positionId.toString());
+    }
+  }
+
+  const unstakedIds = new Set<string>();
+  for (const log of unstakedLogs) {
+    const positionId = getEventPositionId(log);
+    if (positionId !== null) {
+      unstakedIds.add(positionId.toString());
+    }
+  }
+
+  const candidateIds = [...stakedIds].filter((id) => !unstakedIds.has(id));
+
+  const positions = (
+    await Promise.all(
+      candidateIds.map(async (id) => {
+        try {
+          const info = await contract.positionInfo(id);
+          const amount = Number(ethers.formatUnits(info.amount, 18));
+          const lockEnd = Number(info.lockEnd);
+          return {
+            positionId: id,
+            amount,
+            lockEnd,
+            isLocked: lockEnd > 0 && lockEnd > nowSec
+          };
+        } catch {
+          return null;
+        }
+      })
+    )
+  ).filter(Boolean) as Array<{ positionId: string; amount: number; lockEnd: number; isLocked: boolean }>;
+
+  positions.sort((a, b) => Number(a.positionId) - Number(b.positionId));
+
+  const lastPositionId = positions.length ? positions[positions.length - 1].positionId : null;
+
+  return {
+    stakedBalance: Number(ethers.formatUnits(stakedBalanceRaw, 18)),
+    positions,
+    lastPositionId
+  };
 }
 
 async function fetchTierRules() {
@@ -460,61 +529,31 @@ app.get("/api/staking", async (req, res) => {
   }
 
   const fromBlock = Number(process.env.STAKING_DEPLOY_BLOCK || 0);
-  const nowSec = Math.floor(Date.now() / 1000);
-
-  const [stakedBalanceRaw, stakedLogs, unstakedLogs] = await Promise.all([
-    staking.stakedBalanceOf(wallet),
-    staking.queryFilter(staking.filters.Staked(wallet), fromBlock, "latest"),
-    staking.queryFilter(staking.filters.Unstaked(wallet), fromBlock, "latest")
-  ]);
-
-  const stakedIds = new Set<string>();
-  for (const log of stakedLogs) {
-    const positionId = getEventPositionId(log);
-    if (positionId !== null) {
-      stakedIds.add(positionId.toString());
-    }
-  }
-
-  const unstakedIds = new Set<string>();
-  for (const log of unstakedLogs) {
-    const positionId = getEventPositionId(log);
-    if (positionId !== null) {
-      unstakedIds.add(positionId.toString());
-    }
-  }
-
-  const candidateIds = [...stakedIds].filter((id) => !unstakedIds.has(id));
-
-  const positions = (
-    await Promise.all(
-      candidateIds.map(async (id) => {
-        try {
-          const info = await staking.positionInfo(id);
-          const amount = Number(ethers.formatUnits(info.amount, 18));
-          const lockEnd = Number(info.lockEnd);
-          return {
-            positionId: id,
-            amount,
-            lockEnd,
-            isLocked: lockEnd > 0 && lockEnd > nowSec
-          };
-        } catch {
-          return null;
-        }
-      })
-    )
-  ).filter(Boolean) as Array<{ positionId: string; amount: number; lockEnd: number; isLocked: boolean }>;
-
-  positions.sort((a, b) => Number(a.positionId) - Number(b.positionId));
-
-  const lastPositionId = positions.length ? positions[positions.length - 1].positionId : null;
+  const summary = await buildStakingSummary(staking, wallet, fromBlock);
 
   res.json({
     walletAddress: wallet,
-    stakedBalance: Number(ethers.formatUnits(stakedBalanceRaw, 18)),
-    positions,
-    lastPositionId
+    stakedBalance: summary.stakedBalance,
+    positions: summary.positions,
+    lastPositionId: summary.lastPositionId
+  });
+});
+
+app.get("/api/base-staking", async (req, res) => {
+  const wallet = typeof req.query.wallet === "string" ? req.query.wallet : DEFAULT_WALLET;
+  if (!baseStaking || !baseStakingAddress || !ethers.isAddress(wallet)) {
+    res.json({ walletAddress: wallet, stakedBalance: 0, positions: [], lastPositionId: null });
+    return;
+  }
+
+  const fromBlock = Number(process.env.BASE_STAKING_DEPLOY_BLOCK || 0);
+  const summary = await buildStakingSummary(baseStaking, wallet, fromBlock);
+
+  res.json({
+    walletAddress: wallet,
+    stakedBalance: summary.stakedBalance,
+    positions: summary.positions,
+    lastPositionId: summary.lastPositionId
   });
 });
 

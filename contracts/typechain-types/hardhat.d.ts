@@ -277,6 +277,10 @@ declare module "hardhat/types/runtime" {
       name: "WrappedCrates",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.WrappedCrates__factory>;
+    getContractFactory(
+      name: "ZenStakingPool",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ZenStakingPool__factory>;
 
     getContractAt(
       name: "AccessControl",
@@ -608,6 +612,11 @@ declare module "hardhat/types/runtime" {
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.WrappedCrates>;
+    getContractAt(
+      name: "ZenStakingPool",
+      address: string | ethers.Addressable,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ZenStakingPool>;
 
     deployContract(
       name: "AccessControl",
@@ -873,6 +882,10 @@ declare module "hardhat/types/runtime" {
       name: "WrappedCrates",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.WrappedCrates>;
+    deployContract(
+      name: "ZenStakingPool",
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ZenStakingPool>;
 
     deployContract(
       name: "AccessControl",
@@ -1204,6 +1217,11 @@ declare module "hardhat/types/runtime" {
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.WrappedCrates>;
+    deployContract(
+      name: "ZenStakingPool",
+      args: any[],
+      signerOrOptions?: ethers.Signer | DeployContractOptions
+    ): Promise<Contracts.ZenStakingPool>;
 
     // default types
     getContractFactory(

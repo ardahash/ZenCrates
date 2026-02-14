@@ -2944,6 +2944,48 @@
       "artifacts": [
         "MockPriceOracle"
       ]
+    },
+    "C:\\Users\\Arda\\othergithubstuff\\ZenCrates\\contracts\\contracts\\ZenStakingPool.sol": {
+      "lastModificationDate": 1771037686912,
+      "contentHash": "99bfafa5b317d9be808bf55e895567d5",
+      "sourceName": "contracts/ZenStakingPool.sol",
+      "solcConfig": {
+        "version": "0.8.26",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "cancun",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/access/AccessControl.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol",
+        "@openzeppelin/contracts/utils/Pausable.sol",
+        "@openzeppelin/contracts/utils/ReentrancyGuard.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "ZenStakingPool"
+      ]
     }
   }
 }

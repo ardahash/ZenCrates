@@ -13,6 +13,7 @@ Open-data proxy crates are not official benchmarks or licensed indices.
 - CRATES (ERC-20 + Permit) on Horizen L3.
 - wCRATES (ERC-20) on Base with `MINTER_ROLE` controlled by a multisig/bridge-minter.
 - Staking contract that mints sCRATES (ERC-721 positions). Ownership determines rebate eligibility and voting power.
+- ZEN staking pool (stake ZEN to receive CRATES at a fixed pool rate; unstaking returns ZEN minus a 2% fee and requires returning CRATES).
 - FeeRebateController with tiered rebate rules and caps.
 - ExposureCrate and StrategyCrate fee logic with rebate discounting.
 - ETH-collateral crate vaults for mint/burn (ETH-only collateral for now; USDC collateral planned once native USDC is available on Horizen L3).
@@ -51,6 +52,7 @@ Frontend env (`.env.local`):
 - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (WalletConnect Cloud project id)
 - `NEXT_PUBLIC_ADMIN_ADDRESS` (optional, enables admin UI for that address)
 - `NEXT_PUBLIC_BACKEND_URL` (optional, defaults to `http://localhost:4000`)
+- `NEXT_PUBLIC_BRIDGE_URL` (optional, defaults to `https://horizen.hub.caldera.xyz`)
 
 **Backend**
 ```bash
@@ -79,6 +81,13 @@ Backend env (`backend/.env`):
 - `MASSIVE_THROTTLE_MS` (optional, default `12000`; used to avoid rate limits)
 - `STAKING_DEPLOY_BLOCK` (optional; improves staking event scan performance)
 - `CRATE_DEPLOY_BLOCK` (optional; improves portfolio event scan performance)
+- `BASE_STAKING_ADDRESS` (Base staking mirror address)
+- `BASE_STAKING_DEPLOY_BLOCK` (optional; improves base staking scan performance)
+- `ZEN_STAKING_ADDRESS` (ZEN staking pool address)
+- `ZEN_REWARD_PRIVATE_KEY` (keeper key with CONFIG_ROLE on ZEN pool)
+- `ZEN_REWARD_DAILY_CRATES` (daily incentives amount)
+- `ZEN_REWARD_DURATION_SECS` (default `86400`)
+- `ZEN_REWARD_BUFFER_SECS` (default `300`)
 
 **Contracts**
 ```bash
@@ -87,6 +96,14 @@ npm install
 npm run compile
 npm test
 ```
+
+Contracts env (`contracts/.env`):
+- `ZEN_TOKEN_ADDRESS` (Horizen L3 ZEN ERC-20 address)
+- `ZEN_STAKE_TREASURY` (fee recipient; defaults to `TREASURY_ADDRESS`)
+- `ZEN_STAKE_CRATES_PER_ZEN` (CRATES per 1 ZEN; defaults to `PRESALE_CRATES_PER_ETH`)
+- `ZEN_UNSTAKE_FEE_BPS` (default `200` = 2%)
+- `ZEN_STAKE_SEED_FROM_TREASURY` (true/false, optional)
+- `ZEN_STAKE_SEED_AMOUNT` (optional CRATES seed amount if funding from treasury)
 
 ## Dependency Resolution (date-fns / react-day-picker)
 A previous peer dependency conflict was caused by `date-fns@4` with `react-day-picker@8`.
@@ -115,6 +132,14 @@ npm run deploy:base
 ```
 Deploys wCRATES with `MINTER_ROLE` controlled by the multisig or bridge-minter.
 
+### Base Staking (wCRATES mirror)
+```bash
+cd contracts
+npm run deploy:base-staking
+```
+Deploys a wCRATES staking mirror on Base. This mirror does not provide L3
+governance voting or fee rebate eligibility.
+
 ### Presale (fixed price)
 ```bash
 cd contracts
@@ -122,6 +147,20 @@ npm run deploy:presale
 ```
 Deploys the fixed-price CRATES presale on Horizen L3 and updates
 `frontend-bridge/addresses.json` with the presale address.
+
+### ZEN Staking Pool
+```bash
+cd contracts
+npm run deploy:zen-staking
+```
+Deploys the ZEN staking pool on Horizen L3 and updates `frontend-bridge/addresses.json`
+and `backend/src/data/token.ts`. The pool requires CRATES inventory to pay out on stake,
+so seed it from treasury if needed.
+The pool assumes ZEN uses 18 decimals on Horizen L3.
+
+To start incentive accruals, fund the pool with CRATES and call `notifyRewardAmount`
+as the `CONFIG_ROLE` admin. For a daily amount, keep `rewardsDuration = 86400` seconds
+and call `notifyRewardAmount(dailyCrates)` periodically.
 
 ### Deploy ETH-collateral crates (reuse existing L3 deployment)
 ```bash
@@ -161,6 +200,25 @@ If you want backend token metadata to keep staking info from L3, set:
 - `HORIZEN_STAKING_ADDRESS` (same as sCRATES contract)
 - `HORIZEN_SCRATES_ADDRESS` (can match staking contract)
 
+### ZEN Rewards Keeper (automatic incentives)
+```bash
+cd backend
+npm run keeper:zen-rewards
+```
+Calls `notifyRewardAmount` on the ZEN staking pool to fund daily incentives.
+Set `ZEN_REWARD_PRIVATE_KEY` to a key with `CONFIG_ROLE` on the pool and set:
+- `ZEN_STAKING_ADDRESS`
+- `ZEN_REWARD_DAILY_CRATES` (fixed total per day, optional)
+- `ZEN_REWARD_PER_ZEN_DAILY` (per 1 ZEN per day; scales with total ZEN staked)
+- `ZEN_REWARD_DURATION_SECS` (default `86400`)
+- `ZEN_REWARD_BUFFER_SECS` (default `300`)
+
+Schedule it via PM2 cron to run daily, e.g.:
+```bash
+pm2 start npm --name zencrates-zen-rewards -- run keeper:zen-rewards --cron "0 0 * * *"
+pm2 save
+```
+
 ### Registry Outputs
 Deploy scripts update:
 - `frontend-bridge/addresses.json`
@@ -169,8 +227,9 @@ Deploy scripts update:
 
 ## Bridging Strategy
 The Horizen L3 stack provides a Caldera bridge hub for chain-level transfers.
-Token-level bridging for CRATES is not assumed to be available yet, so this
-repo deploys `wCRATES` on Base with a privileged minter (multisig/bridge-minter).
+Token-level bridging for CRATES should use Caldera Metalayer/MetaToken once the
+token is registered. Until that is confirmed, this repo deploys `wCRATES` on
+Base with a privileged minter (multisig/bridge-minter).
 
 When an official bridge path is confirmed:
 1. Deploy the official bridge or MetaToken configuration.
@@ -210,6 +269,7 @@ The backend serves the endpoints required by the frontend:
 - `GET /api/prices`
 - `GET /api/portfolio`
 - `GET /api/staking?wallet=0x...`
+- `GET /api/base-staking?wallet=0x...`
 - `GET /api/bridge/status`
 
 The Next.js API routes proxy these calls. Configure the base URL with:

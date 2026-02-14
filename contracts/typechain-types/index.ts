@@ -138,3 +138,5 @@ export type { StakedCrates } from "./contracts/StakedCrates";
 export { StakedCrates__factory } from "./factories/contracts/StakedCrates__factory";
 export type { WrappedCrates } from "./contracts/WrappedCrates";
 export { WrappedCrates__factory } from "./factories/contracts/WrappedCrates__factory";
+export type { ZenStakingPool } from "./contracts/ZenStakingPool";
+export { ZenStakingPool__factory } from "./factories/contracts/ZenStakingPool__factory";

@@ -11,3 +11,4 @@ export { CratesToken__factory } from "./CratesToken__factory";
 export { FeeRebateController__factory } from "./FeeRebateController__factory";
 export { StakedCrates__factory } from "./StakedCrates__factory";
 export { WrappedCrates__factory } from "./WrappedCrates__factory";
+export { ZenStakingPool__factory } from "./ZenStakingPool__factory";
