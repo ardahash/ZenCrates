@@ -71,14 +71,6 @@ export function ZenStakingModule() {
     query: { enabled: !!zenStaking && !!address },
   });
 
-  const { data: cratesDebt } = useReadContract({
-    address: zenStaking,
-    abi: zenStakingAbi,
-    functionName: "cratesDebtOf",
-    args: address ? [address] : undefined,
-    query: { enabled: !!zenStaking && !!address },
-  });
-
   const { data: claimable } = useReadContract({
     address: zenStaking,
     abi: zenStakingAbi,
@@ -94,17 +86,17 @@ export function ZenStakingModule() {
     query: { enabled: !!zenStaking },
   });
 
+  const { data: totalZenStaked } = useReadContract({
+    address: zenStaking,
+    abi: zenStakingAbi,
+    functionName: "totalZenStaked",
+    query: { enabled: !!zenStaking },
+  });
+
   const { data: rewardRate } = useReadContract({
     address: zenStaking,
     abi: zenStakingAbi,
     functionName: "rewardRate",
-    query: { enabled: !!zenStaking },
-  });
-
-  const { data: rewardsDuration } = useReadContract({
-    address: zenStaking,
-    abi: zenStakingAbi,
-    functionName: "rewardsDuration",
     query: { enabled: !!zenStaking },
   });
 
@@ -139,30 +131,6 @@ export function ZenStakingModule() {
     query: { enabled: !!zenToken && !!zenStaking && !!address },
   });
 
-  const { data: cratesAllowance } = useReadContract({
-    address: cratesToken,
-    abi: erc20Abi,
-    functionName: "allowance",
-    args: address && zenStaking ? [address, zenStaking] : undefined,
-    query: { enabled: !!cratesToken && !!zenStaking && !!address },
-  });
-
-  const { data: cratesOut } = useReadContract({
-    address: zenStaking,
-    abi: zenStakingAbi,
-    functionName: "quoteCrates",
-    args: [amountWei],
-    query: { enabled: !!zenStaking && amountWei > 0n },
-  });
-
-  const { data: cratesRequired } = useReadContract({
-    address: zenStaking,
-    abi: zenStakingAbi,
-    functionName: "quoteCratesForUnstake",
-    args: address ? [address, amountWei] : undefined,
-    query: { enabled: !!zenStaking && !!address && amountWei > 0n },
-  });
-
   const feeAmount = useMemo(() => {
     if (!unstakeFeeBps || amountWei === 0n) return 0n;
     return (amountWei * BigInt(unstakeFeeBps)) / 10_000n;
@@ -173,10 +141,19 @@ export function ZenStakingModule() {
     return rewardRate * 86_400n;
   }, [rewardRate]);
 
-  const needsApproval =
-    mode === "stake"
-      ? amountWei > 0n && (zenAllowance ?? 0n) < amountWei
-      : amountWei > 0n && (cratesAllowance ?? 0n) < (cratesRequired ?? 0n);
+  const perZenDaily = useMemo(() => {
+    if (rewardRate && totalZenStaked && totalZenStaked > 0n) {
+      return (rewardRate * 86_400n * 1_000_000_000_000_000_000n) / totalZenStaked;
+    }
+    return cratesPerZen ?? 0n;
+  }, [rewardRate, totalZenStaked, cratesPerZen]);
+
+  const estimatedDaily = useMemo(() => {
+    if (!perZenDaily || amountWei === 0n) return 0n;
+    return (amountWei * perZenDaily) / 1_000_000_000_000_000_000n;
+  }, [amountWei, perZenDaily]);
+
+  const needsApproval = mode === "stake" && amountWei > 0n && (zenAllowance ?? 0n) < amountWei;
 
   const stakedZenAmount = stakedZen ?? 0n;
   const exceedsStaked = mode === "unstake" && amountWei > 0n && amountWei > stakedZenAmount;
@@ -188,26 +165,14 @@ export function ZenStakingModule() {
     }
     if (!zenStaking) return;
     try {
-      if (mode === "stake") {
-        if (!zenToken) return;
-        const hash = await writeContractAsync({
-          address: zenToken,
-          abi: erc20Abi,
-          functionName: "approve",
-          args: [zenStaking, amountWei],
-        });
-        toast.success(`Approval submitted: ${hash.slice(0, 10)}...`);
-      } else {
-        if (!cratesToken) return;
-        const approveAmount = cratesRequired ?? 0n;
-        const hash = await writeContractAsync({
-          address: cratesToken,
-          abi: erc20Abi,
-          functionName: "approve",
-          args: [zenStaking, approveAmount],
-        });
-        toast.success(`Approval submitted: ${hash.slice(0, 10)}...`);
-      }
+      if (!zenToken) return;
+      const hash = await writeContractAsync({
+        address: zenToken,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [zenStaking, amountWei],
+      });
+      toast.success(`Approval submitted: ${hash.slice(0, 10)}...`);
     } catch {
       toast.error("Approval failed. Please try again.");
     }
@@ -257,7 +222,7 @@ export function ZenStakingModule() {
       <div className="rounded-lg border border-border bg-card p-6">
         <div className="flex flex-col items-center gap-4 py-6 text-center">
           <p className="text-sm text-muted-foreground">
-            Connect your wallet to stake ZEN and receive CRATES.
+            Connect your wallet to stake ZEN and start accruing CRATES incentives.
           </p>
           <WalletButton />
         </div>
@@ -281,8 +246,8 @@ export function ZenStakingModule() {
         <div>
           <h3 className="text-base font-semibold text-foreground">ZEN Staking Pool</h3>
           <p className="text-xs text-muted-foreground">
-            Stake ZEN to receive CRATES at the fixed pool rate. Unstaking returns ZEN
-            and requires returning CRATES.
+            Stake ZEN to accumulate CRATES incentives at a fixed pool rate. Unstaking
+            returns ZEN minus the fee.
           </p>
         </div>
         {!onHorizen && (
@@ -338,9 +303,17 @@ export function ZenStakingModule() {
 
         <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
           <div className="flex items-center justify-between">
-            <span>Current pool rate</span>
+            <span>Fixed incentive rate</span>
             <span className="font-mono text-foreground">
-              {cratesPerZen ? `${Number(formatUnits(cratesPerZen, 18)).toLocaleString()} CRATES / ZEN` : "Loading..."}
+              {perZenDaily
+                ? `${Number(formatUnits(perZenDaily, 18)).toLocaleString()} CRATES / ZEN / day`
+                : "Loading..."}
+            </span>
+          </div>
+          <div className="mt-1 flex items-center justify-between">
+            <span>Total ZEN staked</span>
+            <span className="font-mono text-foreground">
+              {totalZenStaked ? Number(formatUnits(totalZenStaked, zenDecimals ?? 18)).toFixed(2) : "0.00"}
             </span>
           </div>
           <div className="mt-1 flex items-center justify-between">
@@ -350,19 +323,13 @@ export function ZenStakingModule() {
             </span>
           </div>
           <div className="mt-1 flex items-center justify-between">
-            <span>CRATES required to redeem</span>
-            <span className="font-mono text-foreground">
-              {cratesDebt ? Number(formatUnits(cratesDebt, cratesDecimals ?? 18)).toFixed(4) : "0.0000"}
-            </span>
-          </div>
-          <div className="mt-1 flex items-center justify-between">
             <span>Claimable incentives</span>
             <span className="font-mono text-foreground">
               {claimable ? Number(formatUnits(claimable, cratesDecimals ?? 18)).toFixed(4) : "0.0000"} CRATES
             </span>
           </div>
           <div className="mt-1 flex items-center justify-between">
-            <span>Daily incentive rate</span>
+            <span>Daily incentive pool</span>
             <span className="font-mono text-foreground">
               {dailyIncentive ? Number(formatUnits(dailyIncentive, cratesDecimals ?? 18)).toFixed(2) : "0.00"} CRATES
             </span>
@@ -380,21 +347,15 @@ export function ZenStakingModule() {
         {mode === "stake" ? (
           <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
             <div className="flex items-center justify-between">
-              <span>Estimated CRATES out</span>
+              <span>Estimated daily incentives</span>
               <span className="font-mono text-foreground">
-                {cratesOut ? Number(formatUnits(cratesOut, cratesDecimals ?? 18)).toFixed(4) : "0.0000"}
+                {estimatedDaily ? Number(formatUnits(estimatedDaily, cratesDecimals ?? 18)).toFixed(4) : "0.0000"} CRATES
               </span>
             </div>
           </div>
         ) : (
           <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
             <div className="flex items-center justify-between">
-              <span>CRATES to return</span>
-              <span className="font-mono text-foreground">
-                {cratesRequired ? Number(formatUnits(cratesRequired, cratesDecimals ?? 18)).toFixed(4) : "0.0000"}
-              </span>
-            </div>
-            <div className="mt-1 flex items-center justify-between">
               <span>Unstake fee</span>
               <span className="font-mono text-foreground">
                 {feeAmount ? Number(formatUnits(feeAmount, zenDecimals ?? 18)).toFixed(4) : "0.0000"} ZEN
@@ -411,9 +372,7 @@ export function ZenStakingModule() {
           >
             {isWritePending || isConfirming
               ? "Approving..."
-              : mode === "stake"
-                ? "Approve ZEN"
-                : "Approve CRATES"}
+              : "Approve ZEN"}
           </Button>
         ) : (
           <Button
@@ -439,11 +398,10 @@ export function ZenStakingModule() {
         </Button>
 
         <div className="rounded-md bg-muted/60 p-3 text-xs text-muted-foreground">
-          ZEN staking uses a fixed pool rate. Unstaking returns your ZEN minus a
-          {unstakeFeeBps ? ` ${unstakeFeeBps} bps` : " 200 bps"} fee and requires
-          returning CRATES. Incentives accrue over time and are claimable when
-          available. This is a utility flow and does not provide dividends or
-          guaranteed results.
+          ZEN staking uses a fixed incentive rate. Unstaking returns your ZEN
+          minus a {unstakeFeeBps ? ` ${unstakeFeeBps} bps` : " 200 bps"} fee.
+          Incentives accrue over time and are claimable when available. This is
+          a utility flow and does not provide dividends or guaranteed results.
         </div>
         {exceedsStaked && (
           <p className="text-xs text-destructive">

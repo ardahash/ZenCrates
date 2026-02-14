@@ -11,13 +11,12 @@ async function deployFixture() {
   const Mock = await ethers.getContractFactory("MockERC20");
   const zen = await Mock.deploy("Zen", "ZEN");
 
-  const cratesPerZen = ethers.parseUnits("1000", 18);
   const Pool = await ethers.getContractFactory("ZenStakingPool");
   const pool = await Pool.deploy(
     await zen.getAddress(),
     await crates.getAddress(),
     treasury.address,
-    cratesPerZen,
+    ethers.parseUnits("1000", 18),
     200,
     deployer.address
   );
@@ -26,18 +25,16 @@ async function deployFixture() {
   await crates.mint(deployer.address, seed);
   await crates.transfer(await pool.getAddress(), seed);
 
-  return { deployer, user, treasury, crates, zen, pool, cratesPerZen };
+  return { deployer, user, treasury, crates, zen, pool };
 }
 
 describe("ZenStakingPool", function () {
   it("stakes and unstakes with fee", async function () {
-    const { user, treasury, crates, zen, pool, cratesPerZen } = await loadFixture(deployFixture);
+    const { user, treasury, zen, pool } = await loadFixture(deployFixture);
     const zenAmount = ethers.parseUnits("10", 18);
 
     await zen.mint(user.address, zenAmount);
     await zen.connect(user).approve(await pool.getAddress(), zenAmount);
-
-    const cratesOut = (zenAmount * cratesPerZen) / ethers.parseEther("1");
 
     await expect(pool.connect(user).stake(zenAmount)).to.changeTokenBalances(
       zen,
@@ -46,14 +43,10 @@ describe("ZenStakingPool", function () {
     );
 
     expect(await pool.stakedBalanceOf(user.address)).to.equal(zenAmount);
-    expect(await pool.cratesDebtOf(user.address)).to.equal(cratesOut);
 
     const partial = ethers.parseUnits("4", 18);
-    const cratesRequired = (cratesOut * partial) / zenAmount;
     const fee = (partial * 200n) / 10_000n;
     const netZen = partial - fee;
-
-    await crates.connect(user).approve(await pool.getAddress(), cratesRequired);
 
     await expect(pool.connect(user).unstake(partial)).to.changeTokenBalances(
       zen,
@@ -61,21 +54,11 @@ describe("ZenStakingPool", function () {
       [netZen, fee, -partial]
     );
 
-    const remainingCrates = cratesOut - cratesRequired;
-    await crates.connect(user).approve(await pool.getAddress(), remainingCrates);
-
-    await expect(pool.connect(user).unstake(zenAmount - partial)).to.changeTokenBalances(
-      crates,
-      [user, pool],
-      [-remainingCrates, remainingCrates]
-    );
-
     expect(await pool.stakedBalanceOf(user.address)).to.equal(0n);
-    expect(await pool.cratesDebtOf(user.address)).to.equal(0n);
   });
 
   it("accrues and claims incentives", async function () {
-    const { user, crates, zen, pool, cratesPerZen } = await loadFixture(deployFixture);
+    const { user, crates, zen, pool } = await loadFixture(deployFixture);
     const zenAmount = ethers.parseUnits("5", 18);
     const rewardAmount = ethers.parseUnits("1000", 18);
 
@@ -101,7 +84,7 @@ describe("ZenStakingPool", function () {
     );
   });
 
-  it("requires inventory and admin for pause", async function () {
+  it("allows staking without reward reserve and enforces pause", async function () {
     const { user, crates, zen, deployer } = await loadFixture(deployFixture);
 
     const Pool = await ethers.getContractFactory("ZenStakingPool");
@@ -117,10 +100,10 @@ describe("ZenStakingPool", function () {
     await zen.mint(user.address, ethers.parseUnits("1", 18));
     await zen.connect(user).approve(await pool.getAddress(), ethers.parseUnits("1", 18));
 
-    await expect(pool.connect(user).stake(ethers.parseUnits("1", 18))).to.be.reverted;
-
     await expect(pool.connect(user).pause()).to.be.reverted;
     await pool.pause();
     await expect(pool.connect(user).stake(ethers.parseUnits("1", 18))).to.be.reverted;
+    await pool.unpause();
+    await expect(pool.connect(user).stake(ethers.parseUnits("1", 18))).to.not.be.reverted;
   });
 });

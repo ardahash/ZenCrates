@@ -10,8 +10,8 @@ export default function RewardsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Stake ZEN</h1>
           <p className="mt-2 text-muted-foreground">
-            Stake ZEN to receive CRATES at the fixed pool rate and accumulate
-            claimable incentives over time.
+            Stake ZEN to accumulate CRATES incentives at the fixed pool rate and
+            claim them over time.
           </p>
         </div>
 
@@ -23,9 +23,10 @@ export default function RewardsPage() {
               How It Works
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              ZEN staking swaps ZEN into CRATES at a fixed pool rate. Unstaking
-              requires returning CRATES and applies a 2% ZEN fee to the treasury.
-              Incentives accrue over time and are claimable when available.
+              ZEN staking keeps your ZEN deposited while incentives accrue at a
+              fixed pool rate. Unstaking returns ZEN minus a 2% fee to the
+              treasury. Incentives accrue over time and are claimable when
+              available.
             </p>
             <div className="mt-4 rounded-md border border-border bg-muted p-4">
               <div className="flex gap-2">

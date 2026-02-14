@@ -21,8 +21,8 @@ export const TOKEN_META = {
     explorerUrl: "https://horizen.calderaexplorer.xyz/address/0x57da2D504bf8b83Ef304759d9f2648522D7a9280"
   },
   zenStaking: {
-    contractAddress: "0xe3587460770EFF47d26F9545fC64bb51F3768D2E",
-    explorerUrl: "https://horizen.calderaexplorer.xyz/address/0xe3587460770EFF47d26F9545fC64bb51F3768D2E",
+    contractAddress: "0xBd3824FeDaf2Fd909f2Bf4bD2BA822342c3797A8",
+    explorerUrl: "https://horizen.calderaexplorer.xyz/address/0xBd3824FeDaf2Fd909f2Bf4bD2BA822342c3797A8",
     unstakeFeeBps: 200
   }
 } as const;

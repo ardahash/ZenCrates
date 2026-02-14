@@ -31,7 +31,6 @@ export interface ZenStakingPoolInterface extends Interface {
       | "PAUSER_ROLE"
       | "claimRewards"
       | "crates"
-      | "cratesDebtOf"
       | "cratesPerZen"
       | "earned"
       | "getRoleAdmin"
@@ -43,8 +42,6 @@ export interface ZenStakingPoolInterface extends Interface {
       | "pause"
       | "paused"
       | "periodFinish"
-      | "quoteCrates"
-      | "quoteCratesForUnstake"
       | "renounceRole"
       | "revokeRole"
       | "rewardPerToken"
@@ -60,7 +57,6 @@ export interface ZenStakingPoolInterface extends Interface {
       | "stake"
       | "stakedBalanceOf"
       | "supportsInterface"
-      | "totalCratesIssued"
       | "totalZenStaked"
       | "treasury"
       | "unpause"
@@ -105,10 +101,6 @@ export interface ZenStakingPoolInterface extends Interface {
   ): string;
   encodeFunctionData(functionFragment: "crates", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "cratesDebtOf",
-    values: [AddressLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "cratesPerZen",
     values?: undefined
   ): string;
@@ -142,14 +134,6 @@ export interface ZenStakingPoolInterface extends Interface {
   encodeFunctionData(
     functionFragment: "periodFinish",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "quoteCrates",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "quoteCratesForUnstake",
-    values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceRole",
@@ -209,10 +193,6 @@ export interface ZenStakingPoolInterface extends Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "totalCratesIssued",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "totalZenStaked",
     values?: undefined
   ): string;
@@ -250,10 +230,6 @@ export interface ZenStakingPoolInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "crates", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "cratesDebtOf",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "cratesPerZen",
     data: BytesLike
   ): Result;
@@ -280,14 +256,6 @@ export interface ZenStakingPoolInterface extends Interface {
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "periodFinish",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "quoteCrates",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "quoteCratesForUnstake",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -336,10 +304,6 @@ export interface ZenStakingPoolInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "supportsInterface",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalCratesIssued",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -481,20 +445,11 @@ export namespace RoleRevokedEvent {
 }
 
 export namespace StakedEvent {
-  export type InputTuple = [
-    user: AddressLike,
-    zenAmount: BigNumberish,
-    cratesOut: BigNumberish
-  ];
-  export type OutputTuple = [
-    user: string,
-    zenAmount: bigint,
-    cratesOut: bigint
-  ];
+  export type InputTuple = [user: AddressLike, zenAmount: BigNumberish];
+  export type OutputTuple = [user: string, zenAmount: bigint];
   export interface OutputObject {
     user: string;
     zenAmount: bigint;
-    cratesOut: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -542,19 +497,12 @@ export namespace UnstakedEvent {
   export type InputTuple = [
     user: AddressLike,
     zenAmount: BigNumberish,
-    cratesIn: BigNumberish,
     feeZen: BigNumberish
   ];
-  export type OutputTuple = [
-    user: string,
-    zenAmount: bigint,
-    cratesIn: bigint,
-    feeZen: bigint
-  ];
+  export type OutputTuple = [user: string, zenAmount: bigint, feeZen: bigint];
   export interface OutputObject {
     user: string;
     zenAmount: bigint;
-    cratesIn: bigint;
     feeZen: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -616,8 +564,6 @@ export interface ZenStakingPool extends BaseContract {
 
   crates: TypedContractMethod<[], [string], "view">;
 
-  cratesDebtOf: TypedContractMethod<[account: AddressLike], [bigint], "view">;
-
   cratesPerZen: TypedContractMethod<[], [bigint], "view">;
 
   earned: TypedContractMethod<[account: AddressLike], [bigint], "view">;
@@ -651,14 +597,6 @@ export interface ZenStakingPool extends BaseContract {
   paused: TypedContractMethod<[], [boolean], "view">;
 
   periodFinish: TypedContractMethod<[], [bigint], "view">;
-
-  quoteCrates: TypedContractMethod<[zenAmount: BigNumberish], [bigint], "view">;
-
-  quoteCratesForUnstake: TypedContractMethod<
-    [account: AddressLike, zenAmount: BigNumberish],
-    [bigint],
-    "view"
-  >;
 
   renounceRole: TypedContractMethod<
     [role: BytesLike, callerConfirmation: AddressLike],
@@ -722,8 +660,6 @@ export interface ZenStakingPool extends BaseContract {
     "view"
   >;
 
-  totalCratesIssued: TypedContractMethod<[], [bigint], "view">;
-
   totalZenStaked: TypedContractMethod<[], [bigint], "view">;
 
   treasury: TypedContractMethod<[], [string], "view">;
@@ -766,9 +702,6 @@ export interface ZenStakingPool extends BaseContract {
     nameOrSignature: "crates"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "cratesDebtOf"
-  ): TypedContractMethod<[account: AddressLike], [bigint], "view">;
-  getFunction(
     nameOrSignature: "cratesPerZen"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
@@ -809,16 +742,6 @@ export interface ZenStakingPool extends BaseContract {
   getFunction(
     nameOrSignature: "periodFinish"
   ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "quoteCrates"
-  ): TypedContractMethod<[zenAmount: BigNumberish], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "quoteCratesForUnstake"
-  ): TypedContractMethod<
-    [account: AddressLike, zenAmount: BigNumberish],
-    [bigint],
-    "view"
-  >;
   getFunction(
     nameOrSignature: "renounceRole"
   ): TypedContractMethod<
@@ -872,9 +795,6 @@ export interface ZenStakingPool extends BaseContract {
   getFunction(
     nameOrSignature: "supportsInterface"
   ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
-  getFunction(
-    nameOrSignature: "totalCratesIssued"
-  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "totalZenStaked"
   ): TypedContractMethod<[], [bigint], "view">;
@@ -1078,7 +998,7 @@ export interface ZenStakingPool extends BaseContract {
       RoleRevokedEvent.OutputObject
     >;
 
-    "Staked(address,uint256,uint256)": TypedContractEvent<
+    "Staked(address,uint256)": TypedContractEvent<
       StakedEvent.InputTuple,
       StakedEvent.OutputTuple,
       StakedEvent.OutputObject
@@ -1122,7 +1042,7 @@ export interface ZenStakingPool extends BaseContract {
       UnstakeFeeUpdatedEvent.OutputObject
     >;
 
-    "Unstaked(address,uint256,uint256,uint256)": TypedContractEvent<
+    "Unstaked(address,uint256,uint256)": TypedContractEvent<
       UnstakedEvent.InputTuple,
       UnstakedEvent.OutputTuple,
       UnstakedEvent.OutputObject

@@ -21,7 +21,6 @@ contract ZenStakingPool is AccessControl, Pausable, ReentrancyGuard {
   uint16 public unstakeFeeBps;
 
   uint256 public totalZenStaked;
-  uint256 public totalCratesIssued;
 
   uint256 public rewardRate;
   uint256 public rewardsDuration = 1 days;
@@ -31,11 +30,9 @@ contract ZenStakingPool is AccessControl, Pausable, ReentrancyGuard {
   uint256 public rewardReserve;
 
   mapping(address => uint256) private _stakedZen;
-  mapping(address => uint256) private _cratesDebt;
   mapping(address => uint256) public userRewardPerTokenPaid;
   mapping(address => uint256) public rewards;
 
-  uint256 private constant WAD = 1e18;
   uint256 private constant REWARD_PRECISION = 1e18;
   uint16 private constant MAX_FEE_BPS = 2000;
 
@@ -45,12 +42,11 @@ contract ZenStakingPool is AccessControl, Pausable, ReentrancyGuard {
   error FeeTooHigh(uint16 feeBps);
   error InvalidRewardDuration();
   error RewardsActive(uint256 until);
-  error InsufficientCrates(uint256 available, uint256 required);
   error InsufficientStake(uint256 available, uint256 required);
   error InsufficientRewardReserve(uint256 available, uint256 required);
 
-  event Staked(address indexed user, uint256 zenAmount, uint256 cratesOut);
-  event Unstaked(address indexed user, uint256 zenAmount, uint256 cratesIn, uint256 feeZen);
+  event Staked(address indexed user, uint256 zenAmount);
+  event Unstaked(address indexed user, uint256 zenAmount, uint256 feeZen);
   event TreasuryUpdated(address indexed treasury);
   event RateUpdated(uint256 cratesPerZen);
   event UnstakeFeeUpdated(uint16 feeBps);
@@ -108,24 +104,6 @@ contract ZenStakingPool is AccessControl, Pausable, ReentrancyGuard {
 
   function stakedBalanceOf(address account) external view returns (uint256) {
     return _stakedZen[account];
-  }
-
-  function cratesDebtOf(address account) external view returns (uint256) {
-    return _cratesDebt[account];
-  }
-
-  function quoteCrates(uint256 zenAmount) public view returns (uint256) {
-    if (zenAmount == 0) return 0;
-    return (zenAmount * cratesPerZen) / WAD;
-  }
-
-  function quoteCratesForUnstake(address account, uint256 zenAmount) public view returns (uint256) {
-    uint256 staked = _stakedZen[account];
-    if (zenAmount == 0 || staked == 0) return 0;
-    if (zenAmount > staked) return 0;
-    uint256 debt = _cratesDebt[account];
-    if (zenAmount == staked) return debt;
-    return (debt * zenAmount) / staked;
   }
 
   function lastTimeRewardApplicable() public view returns (uint256) {
@@ -208,23 +186,12 @@ contract ZenStakingPool is AccessControl, Pausable, ReentrancyGuard {
   {
     if (zenAmount == 0) revert AmountZero();
 
-    uint256 cratesOut = quoteCrates(zenAmount);
-    if (cratesOut == 0) revert AmountZero();
-
-    uint256 available = crates.balanceOf(address(this));
-    uint256 usable = available > rewardReserve ? available - rewardReserve : 0;
-    if (usable < cratesOut) revert InsufficientCrates(usable, cratesOut);
-
     _stakedZen[msg.sender] += zenAmount;
-    _cratesDebt[msg.sender] += cratesOut;
     totalZenStaked += zenAmount;
-    totalCratesIssued += cratesOut;
 
     zen.safeTransferFrom(msg.sender, address(this), zenAmount);
-    crates.safeTransfer(msg.sender, cratesOut);
-
-    emit Staked(msg.sender, zenAmount, cratesOut);
-    return cratesOut;
+    emit Staked(msg.sender, zenAmount);
+    return zenAmount;
   }
 
   function unstake(uint256 zenAmount)
@@ -238,24 +205,18 @@ contract ZenStakingPool is AccessControl, Pausable, ReentrancyGuard {
     uint256 staked = _stakedZen[msg.sender];
     if (zenAmount > staked) revert InsufficientStake(staked, zenAmount);
 
-    uint256 cratesRequired = quoteCratesForUnstake(msg.sender, zenAmount);
-    if (cratesRequired == 0) revert AmountZero();
-
     uint256 fee = (zenAmount * unstakeFeeBps) / 10_000;
     uint256 netZen = zenAmount - fee;
 
     _stakedZen[msg.sender] = staked - zenAmount;
-    _cratesDebt[msg.sender] -= cratesRequired;
     totalZenStaked -= zenAmount;
-    totalCratesIssued -= cratesRequired;
 
-    crates.safeTransferFrom(msg.sender, address(this), cratesRequired);
     if (fee > 0) {
       zen.safeTransfer(treasury, fee);
     }
     zen.safeTransfer(msg.sender, netZen);
 
-    emit Unstaked(msg.sender, zenAmount, cratesRequired, fee);
+    emit Unstaked(msg.sender, zenAmount, fee);
     return netZen;
   }
 }

@@ -13,7 +13,7 @@ Open-data proxy crates are not official benchmarks or licensed indices.
 - CRATES (ERC-20 + Permit) on Horizen L3.
 - wCRATES (ERC-20) on Base with `MINTER_ROLE` controlled by a multisig/bridge-minter.
 - Staking contract that mints sCRATES (ERC-721 positions). Ownership determines rebate eligibility and voting power.
-- ZEN staking pool (stake ZEN to receive CRATES at a fixed pool rate; unstaking returns ZEN minus a 2% fee and requires returning CRATES).
+- ZEN staking pool (stake ZEN to accrue CRATES incentives at a fixed pool rate; unstaking returns ZEN minus a 2% fee).
 - FeeRebateController with tiered rebate rules and caps.
 - ExposureCrate and StrategyCrate fee logic with rebate discounting.
 - ETH-collateral crate vaults for mint/burn (ETH-only collateral for now; USDC collateral planned once native USDC is available on Horizen L3).

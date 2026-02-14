@@ -156,26 +156,16 @@ export const zenStakingAbi = [
   },
   {
     type: "function",
-    name: "quoteCrates",
-    stateMutability: "view",
-    inputs: [{ name: "zenAmount", type: "uint256" }],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "quoteCratesForUnstake",
-    stateMutability: "view",
-    inputs: [
-      { name: "account", type: "address" },
-      { name: "zenAmount", type: "uint256" },
-    ],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "function",
     name: "stakedBalanceOf",
     stateMutability: "view",
     inputs: [{ name: "account", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "totalZenStaked",
+    stateMutability: "view",
+    inputs: [],
     outputs: [{ type: "uint256" }],
   },
   {
@@ -211,13 +201,6 @@ export const zenStakingAbi = [
     name: "periodFinish",
     stateMutability: "view",
     inputs: [],
-    outputs: [{ type: "uint256" }],
-  },
-  {
-    type: "function",
-    name: "cratesDebtOf",
-    stateMutability: "view",
-    inputs: [{ name: "account", type: "address" }],
     outputs: [{ type: "uint256" }],
   },
 ] as const;
