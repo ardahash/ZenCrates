@@ -75,6 +75,14 @@ const oracleAddress =
 const rebateControllerAddress = process.env.FEE_REBATE_CONTROLLER_ADDRESS || "";
 
 const oracleAbi = ["function getPrice(bytes32) view returns (uint256,uint256)"];
+const ethCrateAbi = [
+  "function latestPrice() view returns (uint256,uint256)",
+  "function latestEthPrice() view returns (uint256,uint256)",
+  "function priceDecimals() view returns (uint8)",
+  "function ethPriceDecimals() view returns (uint8)",
+  "function priceInverted() view returns (bool)",
+  "function unitScale() view returns (uint256)"
+];
 const erc20Abi = [
   "function balanceOf(address) view returns (uint256)",
   "function decimals() view returns (uint8)",
@@ -123,6 +131,19 @@ const historyPath =
 
 const defaultTierLabels = BASE_TIERS.map((tier) => tier.label);
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+type CratePricing = {
+  priceRaw: bigint;
+  priceTimestamp: number;
+  priceDecimals: number;
+  priceInverted: boolean;
+  unitScale: bigint;
+  ethPriceRaw: bigint;
+  ethPriceTimestamp: number;
+  ethPriceDecimals: number;
+};
+
 let cachedTiers: { data: Tier[]; fetchedAt: number } | null = null;
 
 function getPriceAt(crateId: string, timestampSec: number, fallback: number) {
@@ -147,9 +168,53 @@ async function fetchOraclePrice(crateId: string) {
   return { price: BigInt(price), timestamp: Number(timestamp) };
 }
 
+async function fetchCratePricing(crateAddress: string): Promise<CratePricing | null> {
+  if (!crateAddress || crateAddress === ZERO_ADDRESS) return null;
+  const crate = new ethers.Contract(crateAddress, ethCrateAbi, provider);
+  const [
+    latestPrice,
+    latestEthPrice,
+    priceDecimalsRaw,
+    ethPriceDecimalsRaw,
+    priceInvertedRaw,
+    unitScaleRaw
+  ] = await Promise.all([
+    crate.latestPrice(),
+    crate.latestEthPrice(),
+    crate.priceDecimals(),
+    crate.ethPriceDecimals(),
+    crate.priceInverted(),
+    crate.unitScale()
+  ]);
+
+  return {
+    priceRaw: BigInt(latestPrice[0]),
+    priceTimestamp: Number(latestPrice[1]),
+    priceDecimals: Number(priceDecimalsRaw),
+    priceInverted: Boolean(priceInvertedRaw),
+    unitScale: BigInt(unitScaleRaw),
+    ethPriceRaw: BigInt(latestEthPrice[0]),
+    ethPriceTimestamp: Number(latestEthPrice[1]),
+    ethPriceDecimals: Number(ethPriceDecimalsRaw)
+  };
+}
+
 function formatPrice(raw: bigint, decimals: number) {
   if (raw === 0n) return 0;
   return Number(ethers.formatUnits(raw, decimals));
+}
+
+function normalizeHistoryPrice(value: number, pricing: CratePricing | null) {
+  if (!pricing || !value) return value;
+  let normalized = value;
+  if (pricing.priceInverted) {
+    normalized = normalized === 0 ? 0 : 1 / normalized;
+  }
+  if (pricing.unitScale !== 0n && pricing.unitScale !== 10n ** 18n) {
+    const scale = Number(ethers.formatUnits(pricing.unitScale, 18));
+    normalized *= scale;
+  }
+  return normalized;
 }
 
 function loadHistory(): Record<string, Array<{ timestamp: number; price: string }>> {
@@ -171,24 +236,28 @@ function getHistory(crateId: string) {
   return all[crateId] ?? [];
 }
 
-function computeChange24h(crateId: string, currentPrice: number) {
+function computeChange24h(
+  crateId: string,
+  currentPrice: number,
+  normalize?: (price: number) => number
+) {
   if (!currentPrice) return 0;
   const history = getHistory(crateId);
   if (history.length === 0) return 0;
   const cutoff = Date.now() - 24 * 60 * 60 * 1000;
   const past = [...history].reverse().find((entry) => entry.timestamp * 1000 <= cutoff);
   if (!past) return 0;
-  const pastPrice = Number(past.price);
+  const pastPrice = normalize ? normalize(Number(past.price)) : Number(past.price);
   if (!pastPrice) return 0;
   return ((currentPrice - pastPrice) / pastPrice) * 100;
 }
 
-async function computeTvl(crateAddress: string, ethUsdPriceRaw: bigint) {
+async function computeTvl(crateAddress: string, ethUsdPriceRaw: bigint, ethPriceDecimalsValue: number) {
   if (!crateAddress || crateAddress === "0x0000000000000000000000000000000000000000") return 0;
   const balance = await provider.getBalance(crateAddress);
   if (balance === 0n || ethUsdPriceRaw === 0n) return 0;
   const usdValueScaled = (balance * ethUsdPriceRaw) / 10n ** 18n;
-  return Number(ethers.formatUnits(usdValueScaled, ethPriceDecimals));
+  return Number(ethers.formatUnits(usdValueScaled, ethPriceDecimalsValue));
 }
 
 function resolveTier(balance: number, tiers: Tier[]) {
@@ -333,21 +402,25 @@ app.get("/api/rewards", async (req, res) => {
 });
 
 app.get("/api/crates", async (_req, res) => {
-  const ethUsd = await fetchOraclePrice(ethOracleId);
-
   const crates = await Promise.all(
     CRATES_DATA.map(async (crate) => {
-      const price = await fetchOraclePrice(crate.id);
-      const currentPrice = formatPrice(price.price, priceDecimals);
-      const priceChange24h = computeChange24h(crate.id, currentPrice);
-      const tvl = await computeTvl(crate.contractAddress ?? "", ethUsd.price);
+      const pricing = await fetchCratePricing(crate.contractAddress ?? "");
+      const currentPrice = pricing ? formatPrice(pricing.priceRaw, pricing.priceDecimals) : 0;
+      const priceChange24h = computeChange24h(crate.id, currentPrice, (value) =>
+        normalizeHistoryPrice(value, pricing)
+      );
+      const tvl = pricing
+        ? await computeTvl(crate.contractAddress ?? "", pricing.ethPriceRaw, pricing.ethPriceDecimals)
+        : 0;
 
       return {
         ...crate,
         currentPrice,
         priceChange24h,
         tvl,
-        collateralType: "ETH"
+        collateralType: "ETH",
+        priceTimestamp: pricing?.priceTimestamp ?? 0,
+        ethPriceTimestamp: pricing?.ethPriceTimestamp ?? 0
       };
     })
   );
@@ -362,11 +435,14 @@ app.get("/api/crates/:id", async (req, res) => {
     return;
   }
 
-  const price = await fetchOraclePrice(crate.id);
-  const currentPrice = formatPrice(price.price, priceDecimals);
-  const priceChange24h = computeChange24h(crate.id, currentPrice);
-  const ethUsd = await fetchOraclePrice(ethOracleId);
-  const tvl = await computeTvl(crate.contractAddress ?? "", ethUsd.price);
+  const pricing = await fetchCratePricing(crate.contractAddress ?? "");
+  const currentPrice = pricing ? formatPrice(pricing.priceRaw, pricing.priceDecimals) : 0;
+  const priceChange24h = computeChange24h(crate.id, currentPrice, (value) =>
+    normalizeHistoryPrice(value, pricing)
+  );
+  const tvl = pricing
+    ? await computeTvl(crate.contractAddress ?? "", pricing.ethPriceRaw, pricing.ethPriceDecimals)
+    : 0;
 
   const history = getHistory(crate.id).slice(-90);
   const priceHistory = history.map((entry) => ({
@@ -380,7 +456,9 @@ app.get("/api/crates/:id", async (req, res) => {
       currentPrice,
       priceChange24h,
       tvl,
-      collateralType: "ETH"
+      collateralType: "ETH",
+      priceTimestamp: pricing?.priceTimestamp ?? 0,
+      ethPriceTimestamp: pricing?.ethPriceTimestamp ?? 0
     },
     priceHistory
   });
@@ -389,14 +467,16 @@ app.get("/api/crates/:id", async (req, res) => {
 app.get("/api/prices", async (_req, res) => {
   const prices = await Promise.all(
     CRATES_DATA.map(async (crate) => {
-      const price = await fetchOraclePrice(crate.id);
-      const formatted = formatPrice(price.price, priceDecimals);
+      const pricing = await fetchCratePricing(crate.contractAddress ?? "");
+      const formatted = pricing ? formatPrice(pricing.priceRaw, pricing.priceDecimals) : 0;
       return {
         crateId: crate.id,
         ticker: crate.ticker,
         price: formatted,
-        change24h: computeChange24h(crate.id, formatted),
-        timestamp: Date.now()
+        change24h: computeChange24h(crate.id, formatted, (value) =>
+          normalizeHistoryPrice(value, pricing)
+        ),
+        timestamp: pricing?.priceTimestamp ? pricing.priceTimestamp * 1000 : Date.now()
       };
     })
   );
@@ -419,8 +499,12 @@ app.get("/api/portfolio", async (req, res) => {
 
   const prices = new Map<string, number>();
   for (const crate of CRATES_DATA) {
-    const price = await fetchOraclePrice(crate.id);
-    prices.set(crate.id, formatPrice(price.price, priceDecimals));
+    const pricing = await fetchCratePricing(crate.contractAddress ?? "");
+    if (pricing) {
+      prices.set(crate.id, formatPrice(pricing.priceRaw, pricing.priceDecimals));
+    } else {
+      prices.set(crate.id, 0);
+    }
   }
 
   const getBlockTimestamp = async (blockNumber: number) => {

@@ -371,6 +371,10 @@ async function main() {
   const priceDecimals = Number(process.env.ORACLE_PRICE_DECIMALS || 8);
   const ethPriceDecimals = Number(process.env.ETH_PRICE_DECIMALS || priceDecimals);
   const ethOracleId = ethers.id(process.env.ETH_USD_ORACLE_ID || "eth-usd");
+  const defaultPriceMaxAge = Number(process.env.CRATE_PRICE_MAX_AGE || process.env.ORACLE_MAX_AGE || 900);
+  const defaultEthPriceMaxAge = Number(process.env.CRATE_ETH_PRICE_MAX_AGE || defaultPriceMaxAge);
+  const defaultUnitScale = ethers.parseUnits("1", 18);
+  const defaultCollateralFactorBps = Number(process.env.COLLATERAL_FACTOR_BPS || 10_000);
 
   const deployedCrateAddresses: Record<string, string> = {};
 
@@ -378,6 +382,11 @@ async function main() {
     const seed = crateSeeds[i];
     const mintFeeBps = Math.round(seed.fees.mint * 10_000);
     const burnFeeBps = Math.round(seed.fees.burn * 10_000);
+    const priceMaxAge = seed.priceMaxAge ?? defaultPriceMaxAge;
+    const ethPriceMaxAge = seed.ethPriceMaxAge ?? defaultEthPriceMaxAge;
+    const priceInverted = seed.priceInverted ?? false;
+    const unitScale = seed.unitScale ? ethers.parseUnits(String(seed.unitScale), 18) : defaultUnitScale;
+    const collateralFactorBps = seed.collateralFactorBps ?? defaultCollateralFactorBps;
 
     const oracleCfg = {
       priceOracle: await signedOracle.getAddress(),
@@ -385,11 +394,16 @@ async function main() {
       ethOracle: await signedOracle.getAddress(),
       ethOracleId: ethOracleId,
       priceDecimals: priceDecimals,
-      ethPriceDecimals: ethPriceDecimals
+      ethPriceDecimals: ethPriceDecimals,
+      priceMaxAge,
+      ethPriceMaxAge,
+      priceInverted,
+      unitScale
     };
     const feeCfg = {
       mintFeeBps,
       burnFeeBps,
+      collateralFactorBps,
       treasury
     };
 

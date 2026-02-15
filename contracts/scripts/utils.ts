@@ -75,6 +75,7 @@ export function writeBackendCratesData(params: {
     collateralType: string;
     currentPrice: number;
     priceChange24h: number;
+    priceUnit?: string;
     tvl: number;
     fees: { mint: number; burn: number; management: number };
     oracleSources: Array<{ name: string; type: string; endpoint: string }>;

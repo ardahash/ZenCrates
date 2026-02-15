@@ -25,6 +25,9 @@ export interface Crate {
   collateralType: CollateralType;
   currentPrice: number;
   priceChange24h: number;
+  priceUnit?: string;
+  priceTimestamp?: number;
+  ethPriceTimestamp?: number;
   tvl: number;
   fees: {
     mint: number;

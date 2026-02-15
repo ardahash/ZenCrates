@@ -31,6 +31,10 @@ export declare namespace EthCollateralCrate {
     ethOracleId: BytesLike;
     priceDecimals: BigNumberish;
     ethPriceDecimals: BigNumberish;
+    priceMaxAge: BigNumberish;
+    ethPriceMaxAge: BigNumberish;
+    priceInverted: boolean;
+    unitScale: BigNumberish;
   };
 
   export type OracleConfigStructOutput = [
@@ -39,7 +43,11 @@ export declare namespace EthCollateralCrate {
     ethOracle: string,
     ethOracleId: string,
     priceDecimals: bigint,
-    ethPriceDecimals: bigint
+    ethPriceDecimals: bigint,
+    priceMaxAge: bigint,
+    ethPriceMaxAge: bigint,
+    priceInverted: boolean,
+    unitScale: bigint
   ] & {
     priceOracle: string;
     priceOracleId: string;
@@ -47,19 +55,30 @@ export declare namespace EthCollateralCrate {
     ethOracleId: string;
     priceDecimals: bigint;
     ethPriceDecimals: bigint;
+    priceMaxAge: bigint;
+    ethPriceMaxAge: bigint;
+    priceInverted: boolean;
+    unitScale: bigint;
   };
 
   export type FeeConfigStruct = {
     mintFeeBps: BigNumberish;
     burnFeeBps: BigNumberish;
+    collateralFactorBps: BigNumberish;
     treasury: AddressLike;
   };
 
   export type FeeConfigStructOutput = [
     mintFeeBps: bigint,
     burnFeeBps: bigint,
+    collateralFactorBps: bigint,
     treasury: string
-  ] & { mintFeeBps: bigint; burnFeeBps: bigint; treasury: string };
+  ] & {
+    mintFeeBps: bigint;
+    burnFeeBps: bigint;
+    collateralFactorBps: bigint;
+    treasury: string;
+  };
 }
 
 export interface EthCollateralCrateInterface extends Interface {
@@ -67,18 +86,21 @@ export interface EthCollateralCrateInterface extends Interface {
     nameOrSignature:
       | "DEFAULT_ADMIN_ROLE"
       | "FEE_MANAGER_ROLE"
+      | "UNIT_SCALE"
       | "allowance"
       | "approve"
       | "balanceOf"
       | "burn"
       | "burnFeeBps"
       | "chargeFee"
+      | "collateralFactorBps"
       | "computeNetFee"
       | "crateId"
       | "decimals"
       | "ethOracle"
       | "ethOracleId"
       | "ethPriceDecimals"
+      | "ethPriceMaxAge"
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
@@ -92,22 +114,29 @@ export interface EthCollateralCrateInterface extends Interface {
       | "previewBurn"
       | "previewMint"
       | "priceDecimals"
+      | "priceInverted"
+      | "priceMaxAge"
       | "priceOracle"
       | "priceOracleId"
       | "rebateController"
       | "renounceRole"
       | "revokeRole"
+      | "setCollateralFactor"
       | "setDecimals"
       | "setFees"
+      | "setOracleMaxAge"
       | "setOracles"
+      | "setPriceInversion"
       | "setRebateController"
       | "setTreasury"
+      | "setUnitScale"
       | "supportsInterface"
       | "symbol"
       | "totalSupply"
       | "transfer"
       | "transferFrom"
       | "treasury"
+      | "unitScale"
       | "unpause"
   ): FunctionFragment;
 
@@ -115,18 +144,22 @@ export interface EthCollateralCrateInterface extends Interface {
     nameOrSignatureOrTopic:
       | "Approval"
       | "Burned"
+      | "CollateralFactorUpdated"
       | "DecimalsUpdated"
       | "FeeCharged"
       | "FeesUpdated"
       | "Minted"
+      | "OracleMaxAgeUpdated"
       | "OraclesUpdated"
       | "Paused"
+      | "PriceInversionUpdated"
       | "RebateControllerUpdated"
       | "RoleAdminChanged"
       | "RoleGranted"
       | "RoleRevoked"
       | "Transfer"
       | "TreasuryUpdated"
+      | "UnitScaleUpdated"
       | "Unpaused"
   ): EventFragment;
 
@@ -136,6 +169,10 @@ export interface EthCollateralCrateInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "FEE_MANAGER_ROLE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "UNIT_SCALE",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -160,6 +197,10 @@ export interface EthCollateralCrateInterface extends Interface {
     values: [AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "collateralFactorBps",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "computeNetFee",
     values: [AddressLike, BigNumberish]
   ): string;
@@ -172,6 +213,10 @@ export interface EthCollateralCrateInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "ethPriceDecimals",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "ethPriceMaxAge",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -215,6 +260,14 @@ export interface EthCollateralCrateInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "priceInverted",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "priceMaxAge",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "priceOracle",
     values?: undefined
   ): string;
@@ -235,6 +288,10 @@ export interface EthCollateralCrateInterface extends Interface {
     values: [BytesLike, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "setCollateralFactor",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setDecimals",
     values: [BigNumberish, BigNumberish]
   ): string;
@@ -243,8 +300,16 @@ export interface EthCollateralCrateInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setOracleMaxAge",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setOracles",
     values: [AddressLike, BytesLike, AddressLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPriceInversion",
+    values: [boolean]
   ): string;
   encodeFunctionData(
     functionFragment: "setRebateController",
@@ -253,6 +318,10 @@ export interface EthCollateralCrateInterface extends Interface {
   encodeFunctionData(
     functionFragment: "setTreasury",
     values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setUnitScale",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
@@ -272,6 +341,7 @@ export interface EthCollateralCrateInterface extends Interface {
     values: [AddressLike, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "treasury", values?: undefined): string;
+  encodeFunctionData(functionFragment: "unitScale", values?: undefined): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
 
   decodeFunctionResult(
@@ -282,12 +352,17 @@ export interface EthCollateralCrateInterface extends Interface {
     functionFragment: "FEE_MANAGER_ROLE",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "UNIT_SCALE", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "burn", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "burnFeeBps", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "chargeFee", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "collateralFactorBps",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "computeNetFee",
     data: BytesLike
@@ -301,6 +376,10 @@ export interface EthCollateralCrateInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "ethPriceDecimals",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "ethPriceMaxAge",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -335,6 +414,14 @@ export interface EthCollateralCrateInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "priceInverted",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "priceMaxAge",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "priceOracle",
     data: BytesLike
   ): Result;
@@ -352,17 +439,33 @@ export interface EthCollateralCrateInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "setCollateralFactor",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setDecimals",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setFees", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setOracleMaxAge",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "setOracles", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setPriceInversion",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setRebateController",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setTreasury",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setUnitScale",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -380,6 +483,7 @@ export interface EthCollateralCrateInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "treasury", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "unitScale", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
 }
 
@@ -419,6 +523,18 @@ export namespace BurnedEvent {
     tokensIn: bigint;
     ethOut: bigint;
     feeEth: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CollateralFactorUpdatedEvent {
+  export type InputTuple = [collateralFactorBps: BigNumberish];
+  export type OutputTuple = [collateralFactorBps: bigint];
+  export interface OutputObject {
+    collateralFactorBps: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -508,6 +624,22 @@ export namespace MintedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace OracleMaxAgeUpdatedEvent {
+  export type InputTuple = [
+    priceMaxAge: BigNumberish,
+    ethPriceMaxAge: BigNumberish
+  ];
+  export type OutputTuple = [priceMaxAge: bigint, ethPriceMaxAge: bigint];
+  export interface OutputObject {
+    priceMaxAge: bigint;
+    ethPriceMaxAge: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace OraclesUpdatedEvent {
   export type InputTuple = [
     priceOracle: AddressLike,
@@ -538,6 +670,18 @@ export namespace PausedEvent {
   export type OutputTuple = [account: string];
   export interface OutputObject {
     account: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace PriceInversionUpdatedEvent {
+  export type InputTuple = [priceInverted: boolean];
+  export type OutputTuple = [priceInverted: boolean];
+  export interface OutputObject {
+    priceInverted: boolean;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -645,6 +789,18 @@ export namespace TreasuryUpdatedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace UnitScaleUpdatedEvent {
+  export type InputTuple = [unitScale: BigNumberish];
+  export type OutputTuple = [unitScale: bigint];
+  export interface OutputObject {
+    unitScale: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace UnpausedEvent {
   export type InputTuple = [account: AddressLike];
   export type OutputTuple = [account: string];
@@ -704,6 +860,8 @@ export interface EthCollateralCrate extends BaseContract {
 
   FEE_MANAGER_ROLE: TypedContractMethod<[], [string], "view">;
 
+  UNIT_SCALE: TypedContractMethod<[], [bigint], "view">;
+
   allowance: TypedContractMethod<
     [owner: AddressLike, spender: AddressLike],
     [bigint],
@@ -728,6 +886,8 @@ export interface EthCollateralCrate extends BaseContract {
     "nonpayable"
   >;
 
+  collateralFactorBps: TypedContractMethod<[], [bigint], "view">;
+
   computeNetFee: TypedContractMethod<
     [user: AddressLike, grossFee: BigNumberish],
     [[bigint, bigint] & { rebateBps: bigint; netFee: bigint }],
@@ -743,6 +903,8 @@ export interface EthCollateralCrate extends BaseContract {
   ethOracleId: TypedContractMethod<[], [string], "view">;
 
   ethPriceDecimals: TypedContractMethod<[], [bigint], "view">;
+
+  ethPriceMaxAge: TypedContractMethod<[], [bigint], "view">;
 
   getRoleAdmin: TypedContractMethod<[role: BytesLike], [string], "view">;
 
@@ -794,6 +956,10 @@ export interface EthCollateralCrate extends BaseContract {
 
   priceDecimals: TypedContractMethod<[], [bigint], "view">;
 
+  priceInverted: TypedContractMethod<[], [boolean], "view">;
+
+  priceMaxAge: TypedContractMethod<[], [bigint], "view">;
+
   priceOracle: TypedContractMethod<[], [string], "view">;
 
   priceOracleId: TypedContractMethod<[], [string], "view">;
@@ -812,6 +978,12 @@ export interface EthCollateralCrate extends BaseContract {
     "nonpayable"
   >;
 
+  setCollateralFactor: TypedContractMethod<
+    [newCollateralFactorBps: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   setDecimals: TypedContractMethod<
     [newPriceDecimals: BigNumberish, newEthPriceDecimals: BigNumberish],
     [void],
@@ -820,6 +992,12 @@ export interface EthCollateralCrate extends BaseContract {
 
   setFees: TypedContractMethod<
     [newMintFeeBps: BigNumberish, newBurnFeeBps: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setOracleMaxAge: TypedContractMethod<
+    [newPriceMaxAge: BigNumberish, newEthPriceMaxAge: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -835,6 +1013,12 @@ export interface EthCollateralCrate extends BaseContract {
     "nonpayable"
   >;
 
+  setPriceInversion: TypedContractMethod<
+    [newPriceInverted: boolean],
+    [void],
+    "nonpayable"
+  >;
+
   setRebateController: TypedContractMethod<
     [newController: AddressLike],
     [void],
@@ -843,6 +1027,12 @@ export interface EthCollateralCrate extends BaseContract {
 
   setTreasury: TypedContractMethod<
     [newTreasury: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  setUnitScale: TypedContractMethod<
+    [newUnitScale: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -871,6 +1061,8 @@ export interface EthCollateralCrate extends BaseContract {
 
   treasury: TypedContractMethod<[], [string], "view">;
 
+  unitScale: TypedContractMethod<[], [bigint], "view">;
+
   unpause: TypedContractMethod<[], [void], "nonpayable">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
@@ -883,6 +1075,9 @@ export interface EthCollateralCrate extends BaseContract {
   getFunction(
     nameOrSignature: "FEE_MANAGER_ROLE"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "UNIT_SCALE"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "allowance"
   ): TypedContractMethod<
@@ -914,6 +1109,9 @@ export interface EthCollateralCrate extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "collateralFactorBps"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "computeNetFee"
   ): TypedContractMethod<
     [user: AddressLike, grossFee: BigNumberish],
@@ -934,6 +1132,9 @@ export interface EthCollateralCrate extends BaseContract {
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "ethPriceDecimals"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "ethPriceMaxAge"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getRoleAdmin"
@@ -999,6 +1200,12 @@ export interface EthCollateralCrate extends BaseContract {
     nameOrSignature: "priceDecimals"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "priceInverted"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "priceMaxAge"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "priceOracle"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -1022,6 +1229,13 @@ export interface EthCollateralCrate extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "setCollateralFactor"
+  ): TypedContractMethod<
+    [newCollateralFactorBps: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "setDecimals"
   ): TypedContractMethod<
     [newPriceDecimals: BigNumberish, newEthPriceDecimals: BigNumberish],
@@ -1032,6 +1246,13 @@ export interface EthCollateralCrate extends BaseContract {
     nameOrSignature: "setFees"
   ): TypedContractMethod<
     [newMintFeeBps: BigNumberish, newBurnFeeBps: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setOracleMaxAge"
+  ): TypedContractMethod<
+    [newPriceMaxAge: BigNumberish, newEthPriceMaxAge: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -1048,11 +1269,17 @@ export interface EthCollateralCrate extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "setPriceInversion"
+  ): TypedContractMethod<[newPriceInverted: boolean], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "setRebateController"
   ): TypedContractMethod<[newController: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "setTreasury"
   ): TypedContractMethod<[newTreasury: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setUnitScale"
+  ): TypedContractMethod<[newUnitScale: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "supportsInterface"
   ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
@@ -1080,6 +1307,9 @@ export interface EthCollateralCrate extends BaseContract {
     nameOrSignature: "treasury"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
+    nameOrSignature: "unitScale"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "unpause"
   ): TypedContractMethod<[], [void], "nonpayable">;
 
@@ -1096,6 +1326,13 @@ export interface EthCollateralCrate extends BaseContract {
     BurnedEvent.InputTuple,
     BurnedEvent.OutputTuple,
     BurnedEvent.OutputObject
+  >;
+  getEvent(
+    key: "CollateralFactorUpdated"
+  ): TypedContractEvent<
+    CollateralFactorUpdatedEvent.InputTuple,
+    CollateralFactorUpdatedEvent.OutputTuple,
+    CollateralFactorUpdatedEvent.OutputObject
   >;
   getEvent(
     key: "DecimalsUpdated"
@@ -1126,6 +1363,13 @@ export interface EthCollateralCrate extends BaseContract {
     MintedEvent.OutputObject
   >;
   getEvent(
+    key: "OracleMaxAgeUpdated"
+  ): TypedContractEvent<
+    OracleMaxAgeUpdatedEvent.InputTuple,
+    OracleMaxAgeUpdatedEvent.OutputTuple,
+    OracleMaxAgeUpdatedEvent.OutputObject
+  >;
+  getEvent(
     key: "OraclesUpdated"
   ): TypedContractEvent<
     OraclesUpdatedEvent.InputTuple,
@@ -1138,6 +1382,13 @@ export interface EthCollateralCrate extends BaseContract {
     PausedEvent.InputTuple,
     PausedEvent.OutputTuple,
     PausedEvent.OutputObject
+  >;
+  getEvent(
+    key: "PriceInversionUpdated"
+  ): TypedContractEvent<
+    PriceInversionUpdatedEvent.InputTuple,
+    PriceInversionUpdatedEvent.OutputTuple,
+    PriceInversionUpdatedEvent.OutputObject
   >;
   getEvent(
     key: "RebateControllerUpdated"
@@ -1182,6 +1433,13 @@ export interface EthCollateralCrate extends BaseContract {
     TreasuryUpdatedEvent.OutputObject
   >;
   getEvent(
+    key: "UnitScaleUpdated"
+  ): TypedContractEvent<
+    UnitScaleUpdatedEvent.InputTuple,
+    UnitScaleUpdatedEvent.OutputTuple,
+    UnitScaleUpdatedEvent.OutputObject
+  >;
+  getEvent(
     key: "Unpaused"
   ): TypedContractEvent<
     UnpausedEvent.InputTuple,
@@ -1210,6 +1468,17 @@ export interface EthCollateralCrate extends BaseContract {
       BurnedEvent.InputTuple,
       BurnedEvent.OutputTuple,
       BurnedEvent.OutputObject
+    >;
+
+    "CollateralFactorUpdated(uint16)": TypedContractEvent<
+      CollateralFactorUpdatedEvent.InputTuple,
+      CollateralFactorUpdatedEvent.OutputTuple,
+      CollateralFactorUpdatedEvent.OutputObject
+    >;
+    CollateralFactorUpdated: TypedContractEvent<
+      CollateralFactorUpdatedEvent.InputTuple,
+      CollateralFactorUpdatedEvent.OutputTuple,
+      CollateralFactorUpdatedEvent.OutputObject
     >;
 
     "DecimalsUpdated(uint8,uint8)": TypedContractEvent<
@@ -1256,6 +1525,17 @@ export interface EthCollateralCrate extends BaseContract {
       MintedEvent.OutputObject
     >;
 
+    "OracleMaxAgeUpdated(uint64,uint64)": TypedContractEvent<
+      OracleMaxAgeUpdatedEvent.InputTuple,
+      OracleMaxAgeUpdatedEvent.OutputTuple,
+      OracleMaxAgeUpdatedEvent.OutputObject
+    >;
+    OracleMaxAgeUpdated: TypedContractEvent<
+      OracleMaxAgeUpdatedEvent.InputTuple,
+      OracleMaxAgeUpdatedEvent.OutputTuple,
+      OracleMaxAgeUpdatedEvent.OutputObject
+    >;
+
     "OraclesUpdated(address,bytes32,address,bytes32)": TypedContractEvent<
       OraclesUpdatedEvent.InputTuple,
       OraclesUpdatedEvent.OutputTuple,
@@ -1276,6 +1556,17 @@ export interface EthCollateralCrate extends BaseContract {
       PausedEvent.InputTuple,
       PausedEvent.OutputTuple,
       PausedEvent.OutputObject
+    >;
+
+    "PriceInversionUpdated(bool)": TypedContractEvent<
+      PriceInversionUpdatedEvent.InputTuple,
+      PriceInversionUpdatedEvent.OutputTuple,
+      PriceInversionUpdatedEvent.OutputObject
+    >;
+    PriceInversionUpdated: TypedContractEvent<
+      PriceInversionUpdatedEvent.InputTuple,
+      PriceInversionUpdatedEvent.OutputTuple,
+      PriceInversionUpdatedEvent.OutputObject
     >;
 
     "RebateControllerUpdated(address)": TypedContractEvent<
@@ -1342,6 +1633,17 @@ export interface EthCollateralCrate extends BaseContract {
       TreasuryUpdatedEvent.InputTuple,
       TreasuryUpdatedEvent.OutputTuple,
       TreasuryUpdatedEvent.OutputObject
+    >;
+
+    "UnitScaleUpdated(uint256)": TypedContractEvent<
+      UnitScaleUpdatedEvent.InputTuple,
+      UnitScaleUpdatedEvent.OutputTuple,
+      UnitScaleUpdatedEvent.OutputObject
+    >;
+    UnitScaleUpdated: TypedContractEvent<
+      UnitScaleUpdatedEvent.InputTuple,
+      UnitScaleUpdatedEvent.OutputTuple,
+      UnitScaleUpdatedEvent.OutputObject
     >;
 
     "Unpaused(address)": TypedContractEvent<

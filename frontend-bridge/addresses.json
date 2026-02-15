@@ -20,22 +20,22 @@
     "governor": "0x524E7E587DC38D0e86672436979B4E5D5761dac5",
     "timelock": "0x9Bc2E3A034FFE8BA737Bb8285b0c550a2fD41eFb",
     "crates": {
-      "zgold-index": "0xc4aF1e9Aa2D347669FCc09c90527A118D181e6E9",
-      "inflation-hedge": "0x308DAB7AD14D57AD6dd82f3A90fd8BB6c30d0972",
-      "macro-stress": "0x3BBaFCA2fFF4F2b510e77eae4302CF75Dd13e44C",
-      "sp500-index": "0x9dCfe4aA2FFfCc3E554F464E6Ec5eD4610B5907e",
-      "btc-momentum": "0xc61139aD1ad4D01f717de54120d30F8a8286AfCB",
-      "treasury-index": "0x5CD2969eF4Fe33375D4dF762dbC124837C6eBaa4",
-      "equity-large": "0xB7AF467BF5371Ac4D66415570361fc73706A5208",
-      "equity-tech": "0xc5FD69d18e553C9dE4799282f5bF2d8795D43d0F",
-      "equity-bluechip": "0x97FBD7BB10E0B85D37aF2e2303f1EF3Ae416Ffd1",
-      "metal-gold": "0x8390F02aE9f350632B22766Ea22d9A209Fd6e2d7",
-      "metal-silver": "0x7f24A8c6E296C4311D0856D7FA730c27CA9A3ce6",
-      "metal-copper": "0xBcEbddd7001F113e7f1102D0C3E26F58E32Cb7f3",
-      "fx-eurusd": "0x206a0f57aED78E7BF75e48D7f01990A41A130F6B",
-      "fx-gbpusd": "0x0A6ffBDB5f088AcDCEB4Ca6B606054F58e7ed2c3",
-      "fx-usdjpy": "0xB9151064D9241cdCBAE32Bb2a0862aD318047bfc"
+      "zgold-index": "0x73836d794555705f47B1F66785AFaEeB1785Dc66",
+      "inflation-hedge": "0xc1Ae50Aa5fc1a9E066cD7F52297b3EC8aBD806Ff",
+      "macro-stress": "0x8984F3871bcF8E374Af6e1Eb8300999017185Ac6",
+      "sp500-index": "0x033213a17d39BFb6F21Cab62d2A5451eD82f1e3b",
+      "btc-momentum": "0x6Ef186d6B8Bdb621BA19AA4d654f9aA5BD49662B",
+      "treasury-index": "0x7d78f38e3223042d7097D4305B7cC914468613D1",
+      "equity-large": "0xa4c0f1a16fb962E8EfED2936C9020d0a78f24760",
+      "equity-tech": "0x8207318D36D706226A4d90216DB7C6949Ea3B3E3",
+      "equity-bluechip": "0x0d614eEeee8DFb72a53627a0dc22B9602FF2EF70",
+      "metal-gold": "0x31403A854538A7702eb1FEa4B219E1A40270fD2E",
+      "metal-silver": "0x4557887256b973beD60B4EC7600baFdB98d342f6",
+      "metal-copper": "0x0f811B35Cb9729805FceC885C29a31f914304891",
+      "fx-eurusd": "0x2b92326Bd9eF39b74b537072b40176F2cC69AcA9",
+      "fx-gbpusd": "0xFBb1df06bb4c48ae5A66039C38aE95cf1409DF41",
+      "fx-usdjpy": "0xdA8d85bd6942A1Ae478CBc2E76aAfCc9Dd14B69F"
     }
   },
-  "lastUpdated": "2026-02-14T06:09:19.119Z"
+  "lastUpdated": "2026-02-15T03:54:29.763Z"
 }

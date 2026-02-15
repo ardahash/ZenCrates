@@ -2,7 +2,7 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\Arda\\othergithubstuff\\ZenCrates\\contracts\\contracts\\crates\\CrateFactory.sol": {
-      "lastModificationDate": 1770952095838,
+      "lastModificationDate": 1771028635971,
       "contentHash": "bc3a4126120becb3363187488002d51d",
       "sourceName": "contracts/crates/CrateFactory.sol",
       "solcConfig": {
@@ -2867,8 +2867,8 @@
       ]
     },
     "C:\\Users\\Arda\\othergithubstuff\\ZenCrates\\contracts\\contracts\\crates\\EthCollateralCrate.sol": {
-      "lastModificationDate": 1770952042592,
-      "contentHash": "e20fb4ea3f4bf9a222af843f15b9a8a7",
+      "lastModificationDate": 1771099077407,
+      "contentHash": "edb07f6709210c6664d99cf13caac399",
       "sourceName": "contracts/crates/EthCollateralCrate.sol",
       "solcConfig": {
         "version": "0.8.26",

@@ -258,6 +258,24 @@ Keeper notes:
   with `crateId`, `price`, and optional `nonce`/`timestamp`. If `crateId` is not
   bytes32, it will be hashed via `ethers.id(...)`.
 
+## Burn Pricing & Collateral
+- ETH-collateral crates use oracle mark pricing:
+  - `indexPrice` (USD/unit) from the crate price oracle.
+  - `ethPrice` (USD/ETH) from the ETH oracle.
+  - Derived rate: `indexPriceEth = indexPrice / ethPrice`.
+  - `ethOut = tokenAmount * indexPriceEth`, then apply burn fee.
+- `unitScale` (1e18 = 1 token per oracle unit) lets you define token units.
+  - Example: zGLD uses the GLD ETF share price, so `unitScale = 1e18`.
+- Staleness is enforced on-chain via `priceMaxAge` and `ethPriceMaxAge`.
+  - If either feed is stale, mint/burn reverts.
+- `collateralFactorBps` enables overcollateralized minting (CDP-lite).
+  - `10000` = 100% (current behavior), `15000` = 150% collateralization.
+  - A higher factor reduces tokens minted per ETH to add a safety buffer.
+- Solvency depends on maintaining sufficient ETH collateral in the crate.
+  - Burns revert if available ETH is insufficient.
+  - Governance should pause mints or raise collateral factors during extreme
+    price moves to preserve solvency.
+
 ## Backend API
 The backend serves the endpoints required by the frontend:
 - `GET /api/token`

@@ -208,6 +208,26 @@ export const zenStakingAbi = [
 export const ethCollateralCrateAbi = [
   {
     type: "function",
+    name: "latestPrice",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "price", type: "uint256" },
+      { name: "timestamp", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
+    name: "latestEthPrice",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "price", type: "uint256" },
+      { name: "timestamp", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
     name: "mint",
     stateMutability: "payable",
     inputs: [],
@@ -259,6 +279,34 @@ export const ethCollateralCrateAbi = [
     stateMutability: "view",
     inputs: [],
     outputs: [{ type: "uint16" }],
+  },
+  {
+    type: "function",
+    name: "priceMaxAge",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint64" }],
+  },
+  {
+    type: "function",
+    name: "ethPriceMaxAge",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint64" }],
+  },
+  {
+    type: "function",
+    name: "priceInverted",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "unitScale",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
   },
   {
     type: "function",

@@ -31,6 +31,10 @@ export declare namespace EthCollateralCrate {
     ethOracleId: BytesLike;
     priceDecimals: BigNumberish;
     ethPriceDecimals: BigNumberish;
+    priceMaxAge: BigNumberish;
+    ethPriceMaxAge: BigNumberish;
+    priceInverted: boolean;
+    unitScale: BigNumberish;
   };
 
   export type OracleConfigStructOutput = [
@@ -39,7 +43,11 @@ export declare namespace EthCollateralCrate {
     ethOracle: string,
     ethOracleId: string,
     priceDecimals: bigint,
-    ethPriceDecimals: bigint
+    ethPriceDecimals: bigint,
+    priceMaxAge: bigint,
+    ethPriceMaxAge: bigint,
+    priceInverted: boolean,
+    unitScale: bigint
   ] & {
     priceOracle: string;
     priceOracleId: string;
@@ -47,19 +55,30 @@ export declare namespace EthCollateralCrate {
     ethOracleId: string;
     priceDecimals: bigint;
     ethPriceDecimals: bigint;
+    priceMaxAge: bigint;
+    ethPriceMaxAge: bigint;
+    priceInverted: boolean;
+    unitScale: bigint;
   };
 
   export type FeeConfigStruct = {
     mintFeeBps: BigNumberish;
     burnFeeBps: BigNumberish;
+    collateralFactorBps: BigNumberish;
     treasury: AddressLike;
   };
 
   export type FeeConfigStructOutput = [
     mintFeeBps: bigint,
     burnFeeBps: bigint,
+    collateralFactorBps: bigint,
     treasury: string
-  ] & { mintFeeBps: bigint; burnFeeBps: bigint; treasury: string };
+  ] & {
+    mintFeeBps: bigint;
+    burnFeeBps: bigint;
+    collateralFactorBps: bigint;
+    treasury: string;
+  };
 }
 
 export interface CrateFactoryInterface extends Interface {

@@ -1,8 +1,19 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 
-async function deployFixture() {
+type FixtureOptions = {
+  priceDecimals?: number;
+  ethPriceDecimals?: number;
+  price?: string;
+  ethPrice?: string;
+  priceInverted?: boolean;
+  unitScale?: bigint;
+  priceMaxAge?: number;
+  ethPriceMaxAge?: number;
+};
+
+async function deployFixture(options: FixtureOptions = {}) {
   const [deployer, user] = await ethers.getSigners();
 
   const Crates = await ethers.getContractFactory("CratesToken");
@@ -19,9 +30,12 @@ async function deployFixture() {
 
   const ethId = ethers.id("eth-usd");
   const crateId = ethers.id("zgold-index");
-  const price = ethers.parseUnits("2000", 8);
+  const priceDecimals = options.priceDecimals ?? 8;
+  const ethPriceDecimals = options.ethPriceDecimals ?? priceDecimals;
+  const price = ethers.parseUnits(options.price ?? "2000", priceDecimals);
+  const ethPrice = ethers.parseUnits(options.ethPrice ?? "2000", ethPriceDecimals);
 
-  await priceOracle.setPrice(ethId, price);
+  await priceOracle.setPrice(ethId, ethPrice);
   await priceOracle.setPrice(crateId, price);
 
   const EthCrate = await ethers.getContractFactory("EthCollateralCrate");
@@ -30,12 +44,17 @@ async function deployFixture() {
     priceOracleId: crateId,
     ethOracle: await priceOracle.getAddress(),
     ethOracleId: ethId,
-    priceDecimals: 8,
-    ethPriceDecimals: 8
+    priceDecimals,
+    ethPriceDecimals,
+    priceMaxAge: options.priceMaxAge ?? 0,
+    ethPriceMaxAge: options.ethPriceMaxAge ?? 0,
+    priceInverted: options.priceInverted ?? false,
+    unitScale: options.unitScale ?? ethers.parseUnits("1", 18)
   };
   const feeCfg = {
     mintFeeBps: 0,
     burnFeeBps: 0,
+    collateralFactorBps: 10_000,
     treasury: deployer.address
   };
   const crate = await EthCrate.deploy(
@@ -48,7 +67,7 @@ async function deployFixture() {
     deployer.address
   );
 
-  return { deployer, user, crates, staking, controller, priceOracle, crate };
+  return { deployer, user, crates, staking, controller, priceOracle, crate, ethId, crateId, priceDecimals, ethPriceDecimals };
 }
 
 describe("EthCollateralCrate", function () {
@@ -86,5 +105,70 @@ describe("EthCollateralCrate", function () {
     const expectedTokens = ethers.parseEther("0.995");
     const balance = await crate.balanceOf(user.address);
     expect(balance).to.equal(expectedTokens);
+  });
+
+  it("burns more ETH after oracle price increases (net of fees)", async function () {
+    const fixture = await loadFixture(() =>
+      deployFixture({ price: "200", ethPrice: "2000" })
+    );
+    const { deployer, user, crate, priceOracle, crateId } = fixture;
+
+    await crate.connect(deployer).setFees(0, 30); // 0.30% burn fee
+
+    const oneEth = ethers.parseEther("1");
+    await crate.connect(user).mint({ value: oneEth });
+    const tokens = await crate.balanceOf(user.address);
+
+    const newPrice = ethers.parseUnits("204.62", 8); // +2.31%
+    await priceOracle.setPrice(crateId, newPrice);
+
+    const [ethOut] = await crate.previewBurn(user.address, tokens);
+
+    const usdValue = (tokens * newPrice) / ethers.parseEther("1");
+    const grossEth = (usdValue * ethers.parseEther("1")) / ethers.parseUnits("2000", 8);
+    const fee = (grossEth * 30n) / 10_000n;
+    const expectedNet = grossEth - fee;
+
+    expect(ethOut).to.equal(expectedNet);
+    expect(ethOut).to.be.gt(oneEth);
+  });
+
+  it("supports differing oracle decimals", async function () {
+    const { user, crate } = await loadFixture(() =>
+      deployFixture({ priceDecimals: 18, ethPriceDecimals: 8, price: "2000", ethPrice: "2000" })
+    );
+
+    const oneEth = ethers.parseEther("1");
+    await crate.connect(user).mint({ value: oneEth });
+
+    const balance = await crate.balanceOf(user.address);
+    expect(balance).to.equal(oneEth);
+  });
+
+  it("inverts price feeds when configured", async function () {
+    const { user, crate } = await loadFixture(() =>
+      deployFixture({ price: "2", ethPrice: "2000", priceInverted: true })
+    );
+
+    const oneEth = ethers.parseEther("1");
+    await crate.connect(user).mint({ value: oneEth });
+
+    const balance = await crate.balanceOf(user.address);
+    const expectedTokens = ethers.parseUnits("4000", 18);
+    expect(balance).to.equal(expectedTokens);
+  });
+
+  it("reverts on stale oracle data", async function () {
+    const { user, crate } = await loadFixture(() =>
+      deployFixture({ priceMaxAge: 60, ethPriceMaxAge: 60 })
+    );
+
+    await time.increase(120);
+
+    const oneEth = ethers.parseEther("1");
+    await expect(crate.previewMint(user.address, oneEth)).to.be.revertedWithCustomError(
+      crate,
+      "StalePrice"
+    );
   });
 });
