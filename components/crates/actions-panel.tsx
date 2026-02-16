@@ -83,36 +83,6 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
   }, [amount, tokenDecimals]);
 
   const isMintTab = activeTab === "mint" || activeTab === "deposit";
-
-  const priceTimestamp = latestPrice ? Number(latestPrice[1]) : null;
-  const ethPriceTimestamp = latestEthPrice ? Number(latestEthPrice[1]) : null;
-  const lastUpdated =
-    priceTimestamp && ethPriceTimestamp
-      ? Math.min(priceTimestamp, ethPriceTimestamp)
-      : priceTimestamp ?? ethPriceTimestamp ?? null;
-
-  const nowSec = Math.floor(Date.now() / 1000);
-  const priceStale =
-    priceTimestamp && priceMaxAge && priceMaxAge > 0n
-      ? nowSec - priceTimestamp > Number(priceMaxAge)
-      : false;
-  const ethStale =
-    ethPriceTimestamp && ethPriceMaxAge && ethPriceMaxAge > 0n
-      ? nowSec - ethPriceTimestamp > Number(ethPriceMaxAge)
-      : false;
-
-  const priceSource = priceStale || ethStale ? "Cached" : "Oracle";
-
-  const formatAge = (seconds: number) => {
-    if (seconds < 60) return `${seconds}s ago`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    return `${Math.floor(seconds / 86400)}d ago`;
-  };
-
-  const lastUpdatedLabel =
-    lastUpdated && lastUpdated > 0 ? formatAge(Math.max(0, nowSec - lastUpdated)) : "â€”";
-
   const { data: previewMint } = useReadContract({
     address: crateAddress,
     abi: ethCollateralCrateAbi,
@@ -157,6 +127,34 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
     query: { enabled: hasAddress },
   });
 
+  const priceTimestamp = latestPrice ? Number(latestPrice[1]) : null;
+  const ethPriceTimestamp = latestEthPrice ? Number(latestEthPrice[1]) : null;
+  const lastUpdated =
+    priceTimestamp && ethPriceTimestamp
+      ? Math.min(priceTimestamp, ethPriceTimestamp)
+      : priceTimestamp ?? ethPriceTimestamp ?? null;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const priceStale =
+    priceTimestamp && priceMaxAge && priceMaxAge > 0n
+      ? nowSec - priceTimestamp > Number(priceMaxAge)
+      : false;
+  const ethStale =
+    ethPriceTimestamp && ethPriceMaxAge && ethPriceMaxAge > 0n
+      ? nowSec - ethPriceTimestamp > Number(ethPriceMaxAge)
+      : false;
+
+  const priceSource = priceStale || ethStale ? "Cached" : "Oracle";
+
+  const formatAge = (seconds: number) => {
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+  };
+
+  const lastUpdatedLabel =
+    lastUpdated && lastUpdated > 0 ? formatAge(Math.max(0, nowSec - lastUpdated)) : "—";
   const { writeContractAsync, data: txHash, isPending: isWritePending } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash });
 
