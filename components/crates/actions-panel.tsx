@@ -48,6 +48,14 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
   const crateAddress = crate.contractAddress as `0x${string}`;
   const hasAddress = !!crateAddress && crateAddress !== "0x0000000000000000000000000000000000000000";
   const onHorizen = chainId === CHAIN_IDS.HORIZEN_L3;
+  const isMintTab = activeTab === "mint" || activeTab === "deposit";
+  const isBurnTab = !isMintTab;
+
+  const { data: crateEthBalance } = useBalance({
+    address: crateAddress,
+    chainId: CHAIN_IDS.HORIZEN_L3,
+    query: { enabled: hasAddress },
+  });
 
   const { data: tokenDecimals } = useReadContract({
     address: crateAddress,
@@ -82,7 +90,6 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
     }
   }, [amount, tokenDecimals]);
 
-  const isMintTab = activeTab === "mint" || activeTab === "deposit";
   const { data: previewMint } = useReadContract({
     address: crateAddress,
     abi: ethCollateralCrateAbi,
@@ -97,6 +104,14 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
     functionName: "previewBurn",
     args: address ? [address, tokenAmount] : undefined,
     query: { enabled: hasAddress && !!address && !isMintTab && tokenAmount > 0n },
+  });
+
+  const { data: previewBurnFull } = useReadContract({
+    address: crateAddress,
+    abi: ethCollateralCrateAbi,
+    functionName: "previewBurn",
+    args: address && tokenBalance ? [address, tokenBalance] : undefined,
+    query: { enabled: hasAddress && !!address && !!tokenBalance && tokenBalance > 0n },
   });
 
   const { data: latestPrice } = useReadContract({
@@ -157,6 +172,34 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
     lastUpdated && lastUpdated > 0 ? formatAge(Math.max(0, nowSec - lastUpdated)) : "—";
   const { writeContractAsync, data: txHash, isPending: isWritePending } = useWriteContract();
   const { isLoading: isConfirming } = useWaitForTransactionReceipt({ hash: txHash });
+
+  const formatTokenAmount = (value: bigint, digits = 6) => {
+    const formatted = formatUnits(value, tokenDecimals ?? 18);
+    if (!formatted.includes(".")) return formatted;
+    const [whole, fraction] = formatted.split(".");
+    return `${whole}.${fraction.slice(0, digits)}`;
+  };
+
+  const crateEthAvailable = crateEthBalance?.value ?? 0n;
+  const hasCrateEthBalance = !!crateEthBalance;
+  const grossEthForInput = previewBurn ? previewBurn[0] + previewBurn[1] : 0n;
+  const grossEthForFull = previewBurnFull ? previewBurnFull[0] + previewBurnFull[1] : 0n;
+  const maxBurnTokens = useMemo(() => {
+    if (!tokenBalance || tokenBalance === 0n) return 0n;
+    if (grossEthForFull === 0n) return 0n;
+    if (crateEthAvailable >= grossEthForFull) return tokenBalance;
+    return (tokenBalance * crateEthAvailable) / grossEthForFull;
+  }, [tokenBalance, grossEthForFull, crateEthAvailable]);
+
+  const liquidityLimited =
+    isBurnTab && hasCrateEthBalance && grossEthForInput > 0n && crateEthAvailable < grossEthForInput;
+  const fullBurnLimited =
+    isBurnTab &&
+    hasCrateEthBalance &&
+    tokenBalance &&
+    tokenBalance > 0n &&
+    grossEthForFull > 0n &&
+    crateEthAvailable < grossEthForFull;
 
   const handleAction = (action: string) => {
     setPendingAction(action);
@@ -289,14 +332,33 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
                       ? `Amount (${crate.ticker})`
                       : "Amount (ETH)"}
                   </Label>
-                  <Input
-                    id={`${action}-amount`}
-                    type="number"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="mt-1.5 bg-muted border-border text-foreground font-mono"
-                  />
+                  <div className="mt-1.5 flex gap-2">
+                    <Input
+                      id={`${action}-amount`}
+                      type="number"
+                      placeholder="0.00"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="bg-muted border-border text-foreground font-mono"
+                    />
+                    {(action === "burn" || action === "withdraw") && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="border-border text-foreground"
+                        disabled={maxBurnTokens === 0n}
+                        onClick={() => setAmount(formatTokenAmount(maxBurnTokens))}
+                      >
+                        Max burn
+                      </Button>
+                    )}
+                  </div>
+                  {(action === "burn" || action === "withdraw") && fullBurnLimited && (
+                    <div className="mt-2 rounded-md border border-border bg-muted p-3 text-xs text-muted-foreground">
+                      Vault liquidity is limited right now. Use Max burn to withdraw what is currently available. The
+                      rest of your liquidity will be withdrawable after liquidity rebalancing.
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
@@ -331,6 +393,14 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
                       </span>
                     </div>
                   )}
+                  {isBurnTab && (
+                    <div className="flex justify-between">
+                      <span>Available burn liquidity</span>
+                      <span className="font-mono text-foreground">
+                        {crateEthBalance ? Number(crateEthBalance.formatted).toFixed(6) : "0.000000"} ETH
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span>Price source</span>
                     <span className="font-mono text-foreground">{priceSource}</span>
@@ -345,7 +415,14 @@ export function ActionsPanel({ crate }: ActionsPanelProps) {
                   <DialogTrigger asChild>
                     <Button
                       onClick={() => handleAction(action)}
-                      disabled={!amount || Number(amount) <= 0 || !onHorizen || isWritePending || isConfirming}
+                      disabled={
+                        !amount ||
+                        Number(amount) <= 0 ||
+                        !onHorizen ||
+                        isWritePending ||
+                        isConfirming ||
+                        liquidityLimited
+                      }
                       className="w-full bg-zen-teal text-background hover:bg-zen-teal/90 capitalize"
                     >
                       {isWritePending || isConfirming ? "Processing…" : action}
