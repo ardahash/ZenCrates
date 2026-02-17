@@ -16,3 +16,12 @@ node_modules/
 /.env
 ./.env
 /.env.local
+privacy-mini-projects/eip712-threshold-oracle-demo/src/index.js
+privacy-mini-projects/eip712-threshold-oracle-demo/README.md
+privacy-mini-projects/eip712-threshold-oracle-demo/package.json
+privacy-mini-projects/eip712-threshold-oracle-demo/package-lock.json
+privacy-mini-projects/eip712-threshold-oracle-demo.zip
+privacy-mini-projects/commit-reveal-private-voting-demo/src/index.js
+privacy-mini-projects/commit-reveal-private-voting-demo/README.md
+privacy-mini-projects/commit-reveal-private-voting-demo/package.json
+privacy-mini-projects/commit-reveal-private-voting-demo.zip
